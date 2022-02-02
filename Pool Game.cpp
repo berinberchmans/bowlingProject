@@ -14,6 +14,7 @@
 #include<math.h>
 #include"simulation.h"
 
+
 //cue variables
 float gCueAngle = 0.0;
 float gCuePower = 0.25;
@@ -141,7 +142,7 @@ void RenderScene(void) {
 	gluLookAt(gCamPos(0),gCamPos(1),gCamPos(2),gCamLookAt(0),gCamLookAt(1),gCamLookAt(2),0.0f,1.0f,0.0f);
 
 	//draw the ball
-	glColor3f(1.0,1.0,1.0);
+	glColor3f(0,1.0,1.0);
 	
 	for(int i=0;i<NUM_BALLS;i++)
 	{
@@ -151,10 +152,39 @@ void RenderScene(void) {
 			glTranslatef(gTable.balls[i].position(0), (BALL_RADIUS / 2.0), gTable.balls[i].position(1));
 			glutSolidSphere(gTable.balls[i].radius, 32, 32);
 			glPopMatrix();
-			glColor3f(0.5, 0.5, 1.0);
+			glColor3f(0.5, 0, 1.0);
 		}
 		else {
 			if (gTable.balls[i].touched == 0) {
+				GLUquadricObj* cylin = gluNewQuadric();
+				glPushMatrix();
+				glTranslatef(gTable.balls[i].position(0), (BALL_RADIUS/2.0), gTable.balls[i].position(1));
+				GLUquadricObj* quadratic;
+				quadratic = gluNewQuadric();
+				glColor3f(1, 0, 0);
+				glPushMatrix();
+				glRotatef(90, -1, 0, 0);
+				glColor3f(1, 0, 0);
+				gluCylinder(quadratic, 0.05f, 0.01f, 0.2f, 32, 32);
+				glPopMatrix();
+
+				
+				GLUquadricObj* ball;
+				ball = gluNewQuadric();
+				glPushMatrix();
+				glTranslatef(gTable.balls[i].position(0), (BALL_RADIUS)+0.19f, gTable.balls[i].position(1));
+				gluSphere(ball, 0.02f, 30, 30);
+				glPopMatrix();
+				/*
+				GLUquadricObj* ball2;
+				ball2 = gluNewQuadric();
+				glPushMatrix();
+				glTranslatef(gTable.balls[i].position(0), (BALL_RADIUS), gTable.balls[i].position(1) + 0.01);
+				gluSphere(ball2, 0.02f, 30, 30);
+				glPopMatrix();
+				*/
+			}
+			else {
 				GLUquadricObj* cylin = gluNewQuadric();
 				glPushMatrix();
 				glTranslatef(gTable.balls[i].position(0), (BALL_RADIUS), gTable.balls[i].position(1));
@@ -162,7 +192,7 @@ void RenderScene(void) {
 				quadratic = gluNewQuadric();
 				glColor3f(1, 0, 0);
 				glPushMatrix();
-				glRotatef(90, 1, 0, 0);
+				glRotatef(0, 1, 0, 0);
 				glColor3f(1, 1, 1);
 				gluCylinder(quadratic, 0.01f, 0.05f, 0.2f, 32, 32);
 				glPopMatrix();
@@ -174,20 +204,13 @@ void RenderScene(void) {
 				glTranslatef(gTable.balls[i].position(0), (BALL_RADIUS), gTable.balls[i].position(1));
 				gluSphere(ball, 0.02f, 30, 30);
 				glPopMatrix();
-
-				GLUquadricObj* ball2;
-				ball2 = gluNewQuadric();
-				glPushMatrix();
-				glTranslatef(gTable.balls[i].position(0), (BALL_RADIUS), gTable.balls[i].position(1) + 0.01);
-				gluSphere(ball2, 0.02f, 30, 30);
-				glPopMatrix();
 			}
 			
 
 		}
 	}
 
-	glColor3f(1.0,1.0,1.0);
+	//glColor3f(1.0,1.0,1.0);
 
 	//draw the table
 	for(int i=0;i<NUM_CUSHIONS;i++)
@@ -242,7 +265,7 @@ void RenderScene(void) {
 		glColor3f(1.0,0.0,0.0);
 		glVertex3f (gTable.balls[0].position(0), (BALL_RADIUS/2.0f), gTable.balls[0].position(1));
 		glVertex3f ((gTable.balls[0].position(0)+cuex), (BALL_RADIUS/2.0f), (gTable.balls[0].position(1)+cuez));
-		glColor3f(1.0,1.0,1.0);
+		glColor3f(1.0,0,0);
 		glEnd();
 	}
 
