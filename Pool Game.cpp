@@ -19,10 +19,10 @@
 
 
 int Gameturn = 0;
-int maxGameTurn = 10;
+int maxGameTurn = 4;
 bool nonRepeat = false;
 bool gameOver = false;
-
+bool canhit = true;
 //cue variables
 float gCueAngle = 0.0;
 float gCuePower = 0.25;
@@ -249,21 +249,43 @@ void RenderScene(void) {
 		}
 		//std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
-	if (Gameturn == maxGameTurn) {
-		char  strikecharX[] = "Game Over!";
-		gameOver == true;
-		glRasterPos2f(0.0f, 0.51f);
+	if (Gameturn >= maxGameTurn) {
+		char  strikechariX[] = "Game Over!";
+		gameOver = true;
+		glRasterPos2f(0.0f, 0.61f);
 		glColor3f(1., 0., 0.);
-		int lenO = strlen(strikecharX);
-		for (int i = 0; i < lenO; i++) {
-			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, strikecharX[i]);
+		int lenOi = strlen(strikechariX);
+		for (int i = 0; i < lenOi; i++) {
+			glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, strikechariX[i]);
+		}
+		char  whowon[2] = "";
+		char  resultx[] = " Wins!";
+		if (gTable.players[0].score > gTable.players[1].score) {
+		
+			std::strcat(whowon, "1");
+		}
+		else {
+			std::strcat(whowon, "2");
+		}
+		char* newArray = new char[std::strlen("Player ") + std::strlen(whowon) + 1];
+		std::strcpy(newArray, "Player ");
+		std::strcat(newArray, whowon);
+		int len12 = strlen(resultx);
+		int len22 = strlen(newArray);
+		std::cout << lenOi<<" str" << len12 << " res" << len22 << " who";
+		
+		for (int j = 0; j < len22; j++) {
+			glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, newArray[j]);
+		}
+		for (int k = 0; k < len12; k++) {
+			glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, resultx[k]);
 		}
 	}
 	
 	if (gTable.AnyBallsMoving() == false && nonRepeat == true ) {
 		gTable.players[Gameturn % NUM_PLAYERS].score = gTable.players[Gameturn % NUM_PLAYERS].score + gg;
 		nonRepeat = false;
-		std::cout <<" Soldier Boy " << gTable.players[Gameturn % NUM_PLAYERS].score;
+		//std::cout <<" Soldier Boy " << gTable.players[Gameturn % NUM_PLAYERS].score;
 	}
 	//gTable.players[0].score = gTable.players[0].score + gg;
 
@@ -435,8 +457,13 @@ void KeyboardFunc(unsigned char key, int x, int y)
 			{
 				vec2 imp(	(-sin(gCueAngle) * gCuePower * gCueBallFactor),
 							(-cos(gCueAngle) * gCuePower * gCueBallFactor));
-				gTable.balls[0].ApplyImpulse(imp);	
-				nonRepeat = true;
+				if (gameOver == false && canhit == true) {
+					gTable.balls[0].ApplyImpulse(imp);
+					canhit = false;
+					nonRepeat = true;
+				}
+				
+				
 			}
 			break;
 		}
@@ -485,10 +512,12 @@ void KeyboardFunc(unsigned char key, int x, int y)
 		}
 	case('q'):
 		{
+	
 		if (gameOver == false) {
 			if (gTable.AnyBallsMoving() == false) {
 				nonRepeat = true;
 				Gameturn++;
+				canhit = true;
 				for (int i = 0; i < NUM_BALLS; i++)
 				{
 					gTable.balls[i].Reset();
@@ -594,6 +623,7 @@ void UpdateScene(int ms)
 {
 	if(gTable.AnyBallsMoving()==false) gDoCue = true;
 	else gDoCue = false;
+	
 
 	if(gDoCue)
 	{
