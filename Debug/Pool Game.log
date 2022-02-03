@@ -1,7 +1,6 @@
 ﻿cl : command line warning D9035: option 'Gm' has been deprecated and will be removed in a future release
   Pool Game.cpp
-  Generating Code...
-  Compiling...
-  simulation.cpp
-  Generating Code...
+D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(271,2): warning C4996: 'itoa': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _itoa. See online help for details.
+D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(285,2): warning C4996: 'itoa': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _itoa. See online help for details.
+D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(224,6): warning C4101: 'w': unreferenced local variable
   Pool Game.vcxproj -> D:\Uni projects\Pool Game v3.0@week4\openglbowling\Debug\Pool Game.exe

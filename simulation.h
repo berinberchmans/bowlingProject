@@ -13,9 +13,10 @@
 #define BALL_MASS		(0.1f)
 #define TWO_PI			(6.2832f)
 #define	SIM_UPDATE_MS	(10)
-#define NUM_BALLS		(15)		
+#define NUM_BALLS		(11)		
 #define NUM_CUSHIONS	(5)		
 #define MAX_PARTICLES	(200)
+#define NUM_PLAYERS	(2)
 /*-----------------------------------------------------------
   plane normals
   -----------------------------------------------------------*/
@@ -39,6 +40,22 @@ public:
 
 	void MakeNormal(void);
 	void MakeCentre(void);
+};
+
+
+/*-----------------------------------------------------------
+  player class
+  -----------------------------------------------------------*/
+
+class player {
+	static int playerIndex;
+public:
+	int score;
+	int index;
+	player() : score(0) {
+		index = playerIndex++;
+	}
+	//void getPlayer(int playerI);
 };
 
 /*-----------------------------------------------------------
@@ -149,13 +166,31 @@ public:
 	ball balls[NUM_BALLS];	
 	cushion cushions[NUM_CUSHIONS];
 	particleSet parts;
-
+	player players[NUM_PLAYERS];
 	void SetupCushions(void);
 	void Update(int ms);	
 	bool AnyBallsMoving(void) const;
 };
 
 /*-----------------------------------------------------------
+  lane class
+  -----------------------------------------------------------*/
+class lane
+{
+public:
+	ball balls[NUM_BALLS];
+	cushion cushions[NUM_CUSHIONS];
+	particleSet parts;
+
+	void SetupCushions(void);
+	void Update(int ms);
+	bool AnyBallsMoving(void) const;
+};
+
+/*-----------------------------------------------------------
   global table
   -----------------------------------------------------------*/
+extern lane gLane;
 extern table gTable;
+
+

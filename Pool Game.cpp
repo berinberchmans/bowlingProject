@@ -8,12 +8,20 @@
 #include <time.h> 
 #include<windows.h>
 
+#include <thread>         // std::this_thread::sleep_for
+#include <chrono>     
+
 #include "stdafx.h"
 #include "stdafx.h"
 #include<glut.h>
 #include<math.h>
 #include"simulation.h"
 
+
+int Gameturn = 0;
+int maxGameTurn = 10;
+bool nonRepeat = false;
+bool gameOver = false;
 
 //cue variables
 float gCueAngle = 0.0;
@@ -142,7 +150,7 @@ void RenderScene(void) {
 	gluLookAt(gCamPos(0),gCamPos(1),gCamPos(2),gCamLookAt(0),gCamLookAt(1),gCamLookAt(2),0.0f,1.0f,0.0f);
 
 	//draw the ball
-	glColor3f(0,1.0,1.0);
+	glColor3f(0.3,0.3,0.3);
 	
 	for(int i=0;i<NUM_BALLS;i++)
 	{
@@ -210,16 +218,104 @@ void RenderScene(void) {
 		}
 	}
 
-	//glColor3f(1.0,1.0,1.0);
+	glColor3f(1.0,1.0,1.0);
+	//draw text
+	char  da[] = "Welcome to the pool game";
+	int w;
+	//w = glutBitmapLength(GLUT_BITMAP_8_BY_13, da);
+	float x = .5; /* Centre in the middle of the window */
+	glRasterPos2f(0.3f, 0.71f);
+	glColor3f(1., 0., 0.);
+	int len = strlen(da);
+	for (int i = 0; i < len; i++) {
+		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, da[i]);
+	}
 
+
+	int gg = 0;
+	for (int i = 0; i < NUM_BALLS; i++)
+	{
+		if (gTable.balls[i].touched == 1) {
+			gg++;
+		}
+	}
+	if (gg == 10) {
+		char  strikechar[] = "Strike!";
+		glRasterPos2f(0.1f, 0.71f);
+		glColor3f(1., 0., 0.);
+		int lenx = strlen(strikechar);
+		for (int i = 0; i < lenx; i++) {
+			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, strikechar[i]);
+		}
+		//std::this_thread::sleep_for(std::chrono::seconds(1));
+	}
+	if (Gameturn == maxGameTurn) {
+		char  strikecharX[] = "Game Over!";
+		gameOver == true;
+		glRasterPos2f(0.0f, 0.51f);
+		glColor3f(1., 0., 0.);
+		int lenO = strlen(strikecharX);
+		for (int i = 0; i < lenO; i++) {
+			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, strikecharX[i]);
+		}
+	}
+	
+	if (gTable.AnyBallsMoving() == false && nonRepeat == true ) {
+		gTable.players[Gameturn % NUM_PLAYERS].score = gTable.players[Gameturn % NUM_PLAYERS].score + gg;
+		nonRepeat = false;
+		std::cout <<" Soldier Boy " << gTable.players[Gameturn % NUM_PLAYERS].score;
+	}
+	//gTable.players[0].score = gTable.players[0].score + gg;
+
+
+	char  da1[20] = "0";
+	itoa(gTable.players[0].score, da1, 10);
+	glRasterPos2f(-0.6f, 0.7f);
+	glColor3f(1., 0., 0.);
+	char  da2[20] = "player 1 Score :";
+	int lenc1 = strlen(da2);
+	for (int i = 0; i < lenc1; i++) {
+		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, da2[i]);
+	}
+	int lenc = strlen(da1);
+	for (int i = 0; i < lenc; i++) {
+		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, da1[i]);
+	}
+
+	char  da3[20] = "0";
+	itoa(gTable.players[1].score, da3, 10);
+	glRasterPos2f(-0.6f, 0.8f);
+	glColor3f(1., 0., 0.);
+	char  da4[20] = "player 2 Score :";
+	int lenc2 = strlen(da4);
+	for (int i = 0; i < lenc2; i++) {
+		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, da4[i]);
+	}
+	int lenc3 = strlen(da3);
+	for (int i = 0; i < lenc3; i++) {
+		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, da3[i]);
+	}
+	
+	
 	//draw the table
-	for(int i=0;i<NUM_CUSHIONS;i++)
+	for (int i = 0; i<NUM_CUSHIONS; i++)
 	{	
+		
+			glBegin(GL_LINE_LOOP);
+			glVertex3f (gTable.cushions[i].vertices[0](0), 0.0, gTable.cushions[i].vertices[0](1));
+			glVertex3f (gTable.cushions[i].vertices[0](0), 0.1, gTable.cushions[i].vertices[0](1));
+			glVertex3f (gTable.cushions[i].vertices[1](0), 0.1, gTable.cushions[i].vertices[1](1));
+			glVertex3f (gTable.cushions[i].vertices[1](0), 0.0, gTable.cushions[i].vertices[1](1));
+			glEnd();
+	}
+	for (int i = 0; i < NUM_CUSHIONS; i++)
+	{
+
 		glBegin(GL_LINE_LOOP);
-		glVertex3f (gTable.cushions[i].vertices[0](0), 0.0, gTable.cushions[i].vertices[0](1));
-		glVertex3f (gTable.cushions[i].vertices[0](0), 0.1, gTable.cushions[i].vertices[0](1));
-		glVertex3f (gTable.cushions[i].vertices[1](0), 0.1, gTable.cushions[i].vertices[1](1));
-		glVertex3f (gTable.cushions[i].vertices[1](0), 0.0, gTable.cushions[i].vertices[1](1));
+		glVertex3f(gLane.cushions[i].vertices[0](0), 0.0, gLane.cushions[i].vertices[0](1));
+		glVertex3f(gLane.cushions[i].vertices[0](0), 0.1, gLane.cushions[i].vertices[0](1));
+		glVertex3f(gLane.cushions[i].vertices[1](0), 0.1, gLane.cushions[i].vertices[1](1));
+		glVertex3f(gLane.cushions[i].vertices[1](0), 0.0, gLane.cushions[i].vertices[1](1));
 		glEnd();
 	}
 
@@ -339,7 +435,8 @@ void KeyboardFunc(unsigned char key, int x, int y)
 			{
 				vec2 imp(	(-sin(gCueAngle) * gCuePower * gCueBallFactor),
 							(-cos(gCueAngle) * gCuePower * gCueBallFactor));
-				gTable.balls[0].ApplyImpulse(imp);				
+				gTable.balls[0].ApplyImpulse(imp);	
+				nonRepeat = true;
 			}
 			break;
 		}
@@ -388,10 +485,18 @@ void KeyboardFunc(unsigned char key, int x, int y)
 		}
 	case('q'):
 		{
-		for (int i = 0; i < NUM_BALLS; i++)
-		{
-			gTable.balls[i].Reset();
+		if (gameOver == false) {
+			if (gTable.AnyBallsMoving() == false) {
+				nonRepeat = true;
+				Gameturn++;
+				for (int i = 0; i < NUM_BALLS; i++)
+				{
+					gTable.balls[i].Reset();
+				}
+			}
 		}
+	
+
 		break;
 		}
 	}
@@ -461,23 +566,8 @@ void ChangeSize(int w, int h) {
 	gluLookAt(gCamPos(0),gCamPos(1),gCamPos(2),gCamLookAt(0),gCamLookAt(1),gCamLookAt(2),0.0f,1.0f,0.0f);
 }
 void viewScore() {
-
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
-	gluPerspective(600, 1.1, 10, 10.0f);
-	glColor3f(1, 0, 0);
 
-	// 1
-	glRasterPos3f(-550, 750, -600);
-	int gg = 0;
-	for (int i = 0; i < NUM_BALLS; i++)
-	{
-		if (gTable.balls[i].touched == 1) {
-			gg++;
-			}
-	}
-
-	glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, gg);
 }
 
 void InitLights(void)
@@ -529,6 +619,7 @@ void UpdateScene(int ms)
 int _tmain(int argc, _TCHAR* argv[])
 {
 	gTable.SetupCushions();
+	gLane.SetupCushions();
 
 	glutInit(&argc, ((char **)argv));
 	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE| GLUT_RGBA);
@@ -542,7 +633,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	glutTimerFunc(SIM_UPDATE_MS, UpdateScene, SIM_UPDATE_MS);
 	glutReshapeFunc(ChangeSize);
 	glutIdleFunc(RenderScene);
-	viewScore();
+	//viewScore();
 	
 	glutIgnoreKeyRepeat(1);
 	glutKeyboardFunc(KeyboardFunc);
