@@ -830,7 +830,7 @@ int clientConnectfn(int argc, char** argv) {
 	while (dotheaction == false) {
 		if (chooseRoleDone == true && collectionMode == false) {
 			dotheaction = true;
-			std::cout << "client connected";
+			std::cout << "xCLIENTx";
 
 			WSADATA wsaData;
 			SOCKET ConnectSocket = INVALID_SOCKET;
@@ -901,61 +901,79 @@ int clientConnectfn(int argc, char** argv) {
 
 
 
-			std::cout << "STILL Connected!" << std::endl;
+			//std::cout << "STILL Connected!" << std::endl;
 
-			while (true) {
-				printf("Client: ");
+			//if (Gameturn % NUM_PLAYERS == 0) {
+				
+				// Receive until the peer shuts down the connection
+				do {
+					std::cout << "Revieving Msg" << std::endl;
+					iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
+					if (iResult > 0) {
+						//printf("Bytes received: %d\n", iResult);
+						printf("Server says: %s\n", recvbuf);
+						vec2 imp((-sin(gCueAngle) * gCuePower * gCueBallFactor),
+							(-cos(gCueAngle) * gCuePower * gCueBallFactor));
+						//std::string checkval = std::string(recvbuf);
+						
+						if (strcmp(recvbuf, "go") == 0) {
+							std::cout << recvbuf<< "ccc Recieved" << std::endl;
+							gTable.balls[0].ApplyImpulse(imp);
+						}
+						
+						// Echo the buffer back to the sender
+						std::string reply = "Did you say '";
+						reply += recvbuf;
+						reply += "'?";
+						iSendResult = send(ConnectSocket, reply.c_str(), iResult, 0);
+						if (iSendResult == SOCKET_ERROR) {
+							printf("send failed with error: %d\n", WSAGetLastError());
+							closesocket(ConnectSocket);
+							WSACleanup();
+							return 1;
+						}
 
-				fgets(recvbuf, 255, stdin);
-				iResult = send(ConnectSocket, recvbuf, sizeof(recvbuf), 0);
-				if (iResult == SOCKET_ERROR) {
-					printf("send failed with error: %d\n", WSAGetLastError());
-					closesocket(ConnectSocket);
-					WSACleanup();
-					return 1;
-				}
 
-				iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
-				if (iResult > 0)
-					printf("Server says: %s\n", recvbuf);
+						//printf("Bytes sent: %d\n", iSendResult);
+					}
+					else if (iResult == 0)
+						printf("Connection closing...\n");
+					else {
+						printf("recv failed with error: %d\n", WSAGetLastError());
+						closesocket(ConnectSocket);
+						WSACleanup();
+						return 1;
+					}
 
+				} while (iResult > 0 && Gameturn % NUM_PLAYERS == 0);
 
-			}
+			//}
+			//else {
+				
+				while (true && Gameturn % NUM_PLAYERS != 0) {
+					std::cout << "Sending Msg" << std::endl;
+					printf("Client: ");
 
-			// Receive until the peer shuts down the connection
-			do {
-
-				iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
-				if (iResult > 0) {
-					//printf("Bytes received: %d\n", iResult);
-					printf("Client says: %s\n", recvbuf);
-
-					// Echo the buffer back to the sender
-					std::string reply = "Did you say '";
-					reply += recvbuf;
-					reply += "'?";
-					iSendResult = send(ConnectSocket, reply.c_str(), iResult, 0);
-					if (iSendResult == SOCKET_ERROR) {
+					fgets(recvbuf, 255, stdin);
+					iResult = send(ConnectSocket, recvbuf, sizeof(recvbuf), 0);
+					if (iResult == SOCKET_ERROR) {
 						printf("send failed with error: %d\n", WSAGetLastError());
 						closesocket(ConnectSocket);
 						WSACleanup();
 						return 1;
 					}
 
+					iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
+					if (iResult > 0)
+						printf("Server says: %s\n", recvbuf);
 
-					//printf("Bytes sent: %d\n", iSendResult);
-				}
-				else if (iResult == 0)
-					printf("Connection closing...\n");
-				else {
-					printf("recv failed with error: %d\n", WSAGetLastError());
-					closesocket(ConnectSocket);
-					WSACleanup();
-					return 1;
+
 				}
 
-			} while (iResult > 0);
+			//}
+		
 
+			
 			// cleanup
 			closesocket(ConnectSocket);
 			WSACleanup();
@@ -973,7 +991,7 @@ int serverConnectfn(void) {
 	while (dotheaction == false) {
 		if (chooseRoleDone == true && collectionMode == true) {
 			dotheaction = true;
-			std::cout << "connected";
+			std::cout << "SERVER ";
 			WSADATA wsaData;
 			int iResult;
 
@@ -1059,32 +1077,70 @@ int serverConnectfn(void) {
 			//closesocket(ListenSocket);
 
 
+			//if (Gameturn % NUM_PLAYERS == 0) {
+				while (true && Gameturn % NUM_PLAYERS == 0) {
+					printf("Client: ");
+					//bzero(buffer, 256);
+					fgets(recvbuf, 255, stdin);
+					//int n = write(sockfd, buffer, strlen(buffer)�1);
+					//if (n < 0)
+					//	msg("ERROR writing to socket");
+					iResult = send(ClientSocket, "ddd", sizeof(recvbuf), 0);
+					if (iResult == SOCKET_ERROR) {
+						printf("send failed with error: %d\n", WSAGetLastError());
+						closesocket(ClientSocket);
+						WSACleanup();
+						return 1;
+					}
 
-			while (true) {
-				printf("Client: ");
-				//bzero(buffer, 256);
-				fgets(recvbuf, 255, stdin);
-				//int n = write(sockfd, buffer, strlen(buffer)�1);
-				//if (n < 0)
-				//	msg("ERROR writing to socket");
-				iResult = send(ClientSocket, recvbuf, sizeof(recvbuf), 0);
-				if (iResult == SOCKET_ERROR) {
-					printf("send failed with error: %d\n", WSAGetLastError());
-					closesocket(ClientSocket);
-					WSACleanup();
-					return 1;
+					//bzero(buffer, 256);
+					//n = read(sockfd, buffer, 255);
+					//if (n < 0) msg("ERROR reading from socket");
+					//printf("%s\n", buffer);
+					iResult = recv(ClientSocket, recvbuf, recvbuflen, 0);
+					if (iResult > 0)
+						printf("Server says: %s\n", recvbuf);
+					//printf("Bytes received: %d\n", iResult);
+
 				}
+			//}
+			//else {
+				// Receive until the peer shuts down the connection
+				do {
 
-				//bzero(buffer, 256);
-				//n = read(sockfd, buffer, 255);
-				//if (n < 0) msg("ERROR reading from socket");
-				//printf("%s\n", buffer);
-				iResult = recv(ClientSocket, recvbuf, recvbuflen, 0);
-				if (iResult > 0)
-					printf("Server says: %s\n", recvbuf);
-				//printf("Bytes received: %d\n", iResult);
+					iResult = recv(ClientSocket, recvbuf, recvbuflen, 0);
+					if (iResult > 0) {
+						//printf("Bytes received: %d\n", iResult);
+						printf("Client says: %s\n", recvbuf);
+						
 
-			}
+						// Echo the buffer back to the sender
+						std::string reply = "Did you say '";
+						reply += recvbuf;
+						reply += "'?";
+						iSendResult = send(ClientSocket, reply.c_str(), iResult, 0);
+						if (iSendResult == SOCKET_ERROR) {
+							printf("send failed with error: %d\n", WSAGetLastError());
+							closesocket(ClientSocket);
+							WSACleanup();
+							return 1;
+						}
+
+
+						//printf("Bytes sent: %d\n", iSendResult);
+					}
+					else if (iResult == 0)
+						printf("Connection closing...\n");
+					else {
+						printf("recv failed with error: %d\n", WSAGetLastError());
+						closesocket(ClientSocket);
+						WSACleanup();
+						return 1;
+					}
+
+				} while (iResult > 0 && Gameturn % NUM_PLAYERS != 0);
+			//}
+			
 
 			// shutdown the connection since we're done
 			iResult = shutdown(ClientSocket, SD_SEND);
@@ -1094,43 +1150,7 @@ int serverConnectfn(void) {
 				WSACleanup();
 				return 1;
 			}
-			// Receive until the peer shuts down the connection
-			do {
-
-				iResult = recv(ClientSocket, recvbuf, recvbuflen, 0);
-				if (iResult > 0) {
-					//printf("Bytes received: %d\n", iResult);
-					printf("Client says: %s\n", recvbuf);
-					vec2 imp((-sin(gCueAngle) * gCuePower * gCueBallFactor),
-						(-cos(gCueAngle) * gCuePower * gCueBallFactor));
-				
-						gTable.balls[0].ApplyImpulse(imp);
-					
-					// Echo the buffer back to the sender
-					std::string reply = "Did you say '";
-					reply += recvbuf;
-					reply += "'?";
-					iSendResult = send(ClientSocket, reply.c_str(), iResult, 0);
-					if (iSendResult == SOCKET_ERROR) {
-						printf("send failed with error: %d\n", WSAGetLastError());
-						closesocket(ClientSocket);
-						WSACleanup();
-						return 1;
-					}
-
-
-					//printf("Bytes sent: %d\n", iSendResult);
-				}
-				else if (iResult == 0)
-					printf("Connection closing...\n");
-				else {
-					printf("recv failed with error: %d\n", WSAGetLastError());
-					closesocket(ClientSocket);
-					WSACleanup();
-					return 1;
-				}
-
-			} while (iResult > 0);
+			
 			// cleanup
 			closesocket(ClientSocket);
 			WSACleanup();
