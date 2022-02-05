@@ -10,7 +10,8 @@
 #define TABLE_Z			(4.0f)
 #define TABLE_Y			(0.01f)
 #define BALL_RADIUS		(0.05f)
-#define BALL_MASS		(0.1f)
+#define BALL_MASS		(0.15f)
+#define PIN_MASS		(0.1f)
 #define TWO_PI			(6.2832f)
 #define	SIM_UPDATE_MS	(10)
 #define NUM_BALLS		(11)		
@@ -74,7 +75,11 @@ public:
 	int	touched;
 
 	ball(): position(0.0), velocity(0.0), radius(BALL_RADIUS), 
-		mass(BALL_MASS),touched(0) {index = ballIndexCnt++; Reset();}
+		mass(BALL_MASS),touched(0) {index = ballIndexCnt++;
+	if (index != 0) {
+		mass = PIN_MASS;
+	}
+	Reset();}
 	
 	void Reset(void);
 	void ApplyImpulse(vec2 imp);
@@ -101,7 +106,7 @@ public:
 	int		index;
 
 	pin() : position(0.0), velocity(0.0), radius(BALL_RADIUS),
-		mass(BALL_MASS) {
+		mass(PIN_MASS) {
 		index = ballIndexCnt++; //Reset();
 	}
 	/*

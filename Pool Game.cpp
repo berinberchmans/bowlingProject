@@ -1,5 +1,25 @@
-// Pool Game.cpp : Defines the entry point for the console application.
+﻿// Pool Game.cpp : Defines the entry point for the console application.
 //
+
+
+
+// Need to link with Ws2_32.lib, Mswsock.lib, and Advapi32.lib
+#pragma comment (lib, "Ws2_32.lib")
+#pragma comment (lib, "Mswsock.lib")
+#pragma comment (lib, "AdvApi32.lib")
+
+#undef UNICODE
+
+#define WIN32_LEAN_AND_MEAN
+
+
+#include <winsock2.h>
+#include <ws2tcpip.h>
+
+
+#define DEFAULT_BUFLEN 512
+#define DEFAULT_PORT "27015"
+
 
 #include<stdio.h>
 #include <string.h>
@@ -23,6 +43,15 @@ int maxGameTurn = 4;
 bool nonRepeat = false;
 bool gameOver = false;
 bool canhit = true;
+bool welcomeOn = true;
+bool playOffline = true;
+bool chosenMode = false;
+bool startgame = false;
+bool chooseRoleDone = false;
+bool collectionMode = true;
+
+
+
 //cue variables
 float gCueAngle = 0.0;
 float gCuePower = 0.25;
@@ -142,256 +171,409 @@ void DoCamera(int ms)
 }
 
 
+void RenderWelcome(void) {
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	//set camera
+	glLoadIdentity();
+	gluLookAt(gCamPos(0), gCamPos(1), gCamPos(2), gCamLookAt(0), gCamLookAt(1), gCamLookAt(2), 0.0f, 1.0f, 0.0f);
+	//draw the ball
+	glColor3f(0.3, 0.3, 0.3);
+	glColor3f(1.0, 1.0, 1.0);
+	//draw text
+	char  da[] = "Welcome to the pool game";
+	glRasterPos2f(-0.3f, 0.71f);
+	glColor3f(1., 0., 0.);
+	int len = strlen(da);
+	for (int i = 0; i < len; i++) {
+		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, da[i]);
+	}
+
+	char  c01[] = "Press Enter to choose an option";
+	char  c02[] = "Play offline";
+	char  c03[] = "Play Multiplayer LAN";
+	char  c04[] = "->";
+	glRasterPos2f(-0.3f, 0.51f);
+	glColor3f(1., 0., 0.);
+	int lenca = strlen(c01);
+	for (int i = 0; i < lenca; i++) {
+		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c01[i]);
+	}
+	glRasterPos2f(-0.3f, 0.41f);
+	glColor3f(1., 0., 0.);
+	int lencb = strlen(c02);
+	for (int i = 0; i < lencb; i++) {
+		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c02[i]);
+	}
+	glRasterPos2f(-0.3f, 0.31f);
+	glColor3f(1., 0., 0.);
+	int lencc = strlen(c03);
+	for (int i = 0; i < lencc; i++) {
+		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c03[i]);
+	}
+	if (playOffline == true) {
+		glRasterPos2f(-0.38f, 0.41f);
+	}
+	else {
+		glRasterPos2f(-0.38f, 0.31f);
+	}
+	glColor3f(1., 0., 0.);
+	int lensel = strlen(c04);
+	for (int i = 0; i < lensel; i++) {
+		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c04[i]);
+	}
+
+	glFlush();
+	glutSwapBuffers();
+
+}
+
 void RenderScene(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	//set camera
 	glLoadIdentity();
 	gluLookAt(gCamPos(0),gCamPos(1),gCamPos(2),gCamLookAt(0),gCamLookAt(1),gCamLookAt(2),0.0f,1.0f,0.0f);
-
 	//draw the ball
-	glColor3f(0.3,0.3,0.3);
+	glColor3f(0.3, 0.3, 0.3);
 	
-	for(int i=0;i<NUM_BALLS;i++)
-	{
-		if (i == 0) {
-
-			glPushMatrix();
-			glTranslatef(gTable.balls[i].position(0), (BALL_RADIUS / 2.0), gTable.balls[i].position(1));
-			glutSolidSphere(gTable.balls[i].radius, 32, 32);
-			glPopMatrix();
-			glColor3f(0.5, 0, 1.0);
+	if (welcomeOn == true) {
+		glColor3f(1.0, 1.0, 1.0);
+		//draw text
+		char  da[] = "Welcome to the pool game";
+		glRasterPos2f(-0.3f, 0.71f);
+		glColor3f(1., 0., 0.);
+		int len = strlen(da);
+		for (int i = 0; i < len; i++) {
+			glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, da[i]);
 		}
-		else {
-			if (gTable.balls[i].touched == 0) {
-				GLUquadricObj* cylin = gluNewQuadric();
-				glPushMatrix();
-				glTranslatef(gTable.balls[i].position(0), (BALL_RADIUS/2.0), gTable.balls[i].position(1));
-				GLUquadricObj* quadratic;
-				quadratic = gluNewQuadric();
-				glColor3f(1, 0, 0);
-				glPushMatrix();
-				glRotatef(90, -1, 0, 0);
-				glColor3f(1, 0, 0);
-				gluCylinder(quadratic, 0.05f, 0.01f, 0.2f, 32, 32);
-				glPopMatrix();
 
-				
-				GLUquadricObj* ball;
-				ball = gluNewQuadric();
-				glPushMatrix();
-				glTranslatef(gTable.balls[i].position(0), (BALL_RADIUS)+0.19f, gTable.balls[i].position(1));
-				gluSphere(ball, 0.02f, 30, 30);
-				glPopMatrix();
-				/*
-				GLUquadricObj* ball2;
-				ball2 = gluNewQuadric();
-				glPushMatrix();
-				glTranslatef(gTable.balls[i].position(0), (BALL_RADIUS), gTable.balls[i].position(1) + 0.01);
-				gluSphere(ball2, 0.02f, 30, 30);
-				glPopMatrix();
-				*/
+		char  c01[] = "Press Enter to choose an option";
+		glRasterPos2f(-0.3f, 0.51f);
+		glColor3f(1., 0., 0.);
+		int lenca = strlen(c01);
+		for (int i = 0; i < lenca; i++) {
+			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c01[i]);
+		}
+		
+
+		if (chosenMode == false) {
+
+			char  c02[] = "Play offline";
+			char  c03[] = "Play Multiplayer LAN";
+			char  c04[] = "->";
+
+			glRasterPos2f(-0.3f, 0.41f);
+			glColor3f(1., 0., 0.);
+			int lencb = strlen(c02);
+			for (int i = 0; i < lencb; i++) {
+				glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c02[i]);
+			}
+			glRasterPos2f(-0.3f, 0.31f);
+			glColor3f(1., 0., 0.);
+			int lencc = strlen(c03);
+			for (int i = 0; i < lencc; i++) {
+				glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c03[i]);
+			}
+			if (playOffline == true) {
+				glRasterPos2f(-0.38f, 0.41f);
 			}
 			else {
-				GLUquadricObj* cylin = gluNewQuadric();
-				glPushMatrix();
-				glTranslatef(gTable.balls[i].position(0), (BALL_RADIUS), gTable.balls[i].position(1));
-				GLUquadricObj* quadratic;
-				quadratic = gluNewQuadric();
-				glColor3f(1, 0, 0);
-				glPushMatrix();
-				glRotatef(0, 1, 0, 0);
-				glColor3f(1, 1, 1);
-				gluCylinder(quadratic, 0.01f, 0.05f, 0.2f, 32, 32);
-				glPopMatrix();
-
-
-				GLUquadricObj* ball;
-				ball = gluNewQuadric();
-				glPushMatrix();
-				glTranslatef(gTable.balls[i].position(0), (BALL_RADIUS), gTable.balls[i].position(1));
-				gluSphere(ball, 0.02f, 30, 30);
-				glPopMatrix();
+				glRasterPos2f(-0.38f, 0.31f);
 			}
-			
-
-		}
-	}
-
-	glColor3f(1.0,1.0,1.0);
-	//draw text
-	char  da[] = "Welcome to the pool game";
-	int w;
-	//w = glutBitmapLength(GLUT_BITMAP_8_BY_13, da);
-	float x = .5; /* Centre in the middle of the window */
-	glRasterPos2f(0.3f, 0.71f);
-	glColor3f(1., 0., 0.);
-	int len = strlen(da);
-	for (int i = 0; i < len; i++) {
-		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, da[i]);
-	}
-
-
-	int gg = 0;
-	for (int i = 0; i < NUM_BALLS; i++)
-	{
-		if (gTable.balls[i].touched == 1) {
-			gg++;
-		}
-	}
-	if (gg == 10) {
-		char  strikechar[] = "Strike!";
-		glRasterPos2f(0.1f, 0.71f);
-		glColor3f(1., 0., 0.);
-		int lenx = strlen(strikechar);
-		for (int i = 0; i < lenx; i++) {
-			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, strikechar[i]);
-		}
-		//std::this_thread::sleep_for(std::chrono::seconds(1));
-	}
-	if (Gameturn >= maxGameTurn) {
-		char  strikechariX[] = "Game Over!";
-		gameOver = true;
-		glRasterPos2f(0.0f, 0.61f);
-		glColor3f(1., 0., 0.);
-		int lenOi = strlen(strikechariX);
-		for (int i = 0; i < lenOi; i++) {
-			glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, strikechariX[i]);
-		}
-		char  whowon[2] = "";
-		char  resultx[] = " Wins!";
-		if (gTable.players[0].score > gTable.players[1].score) {
-		
-			std::strcat(whowon, "1");
+			//glRasterPos2f(-0.38f, 0.31f);
+			glColor3f(1., 0., 0.);
+			int lensel = strlen(c04);
+			for (int i = 0; i < lensel; i++) {
+				glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c04[i]);
+			}
 		}
 		else {
-			std::strcat(whowon, "2");
-		}
-		char* newArray = new char[std::strlen("Player ") + std::strlen(whowon) + 1];
-		std::strcpy(newArray, "Player ");
-		std::strcat(newArray, whowon);
-		int len12 = strlen(resultx);
-		int len22 = strlen(newArray);
-		std::cout << lenOi<<" str" << len12 << " res" << len22 << " who";
-		
-		for (int j = 0; j < len22; j++) {
-			glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, newArray[j]);
-		}
-		for (int k = 0; k < len12; k++) {
-			glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, resultx[k]);
-		}
-	}
-	
-	if (gTable.AnyBallsMoving() == false && nonRepeat == true ) {
-		gTable.players[Gameturn % NUM_PLAYERS].score = gTable.players[Gameturn % NUM_PLAYERS].score + gg;
-		nonRepeat = false;
-		//std::cout <<" Soldier Boy " << gTable.players[Gameturn % NUM_PLAYERS].score;
-	}
-	//gTable.players[0].score = gTable.players[0].score + gg;
+			//welcomeOn = false;
+			if (playOffline == true) {
+				welcomeOn = false;
+				startgame = true;
+
+			}
+			else {
+				if (chooseRoleDone == true) {
+					welcomeOn = false;
+					startgame = true;
+
+				}
+				else {
+					char  c02[] = "Host";
+					char  c03[] = "Join";
+					char  c04[] = "->";
+
+					glRasterPos2f(-0.3f, 0.41f);
+					glColor3f(1., 0., 0.);
+					int lencb = strlen(c02);
+					for (int i = 0; i < lencb; i++) {
+						glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c02[i]);
+					}
+					glRasterPos2f(-0.3f, 0.31f);
+					glColor3f(1., 0., 0.);
+					int lencc = strlen(c03);
+					for (int i = 0; i < lencc; i++) {
+						glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c03[i]);
+					}
+					if (collectionMode == true) {
+						glRasterPos2f(-0.38f, 0.41f);
+					}
+					else {
+						glRasterPos2f(-0.38f, 0.31f);
+					}
+					//glRasterPos2f(-0.38f, 0.31f);
+					glColor3f(1., 0., 0.);
+					int lensel = strlen(c04);
+					for (int i = 0; i < lensel; i++) {
+						glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c04[i]);
+					}
+				}
+				
+
+			}
 
 
-	char  da1[20] = "0";
-	itoa(gTable.players[0].score, da1, 10);
-	glRasterPos2f(-0.6f, 0.7f);
-	glColor3f(1., 0., 0.);
-	char  da2[20] = "player 1 Score :";
-	int lenc1 = strlen(da2);
-	for (int i = 0; i < lenc1; i++) {
-		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, da2[i]);
-	}
-	int lenc = strlen(da1);
-	for (int i = 0; i < lenc; i++) {
-		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, da1[i]);
+		}
+
+
 	}
 
-	char  da3[20] = "0";
-	itoa(gTable.players[1].score, da3, 10);
-	glRasterPos2f(-0.6f, 0.8f);
-	glColor3f(1., 0., 0.);
-	char  da4[20] = "player 2 Score :";
-	int lenc2 = strlen(da4);
-	for (int i = 0; i < lenc2; i++) {
-		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, da4[i]);
-	}
-	int lenc3 = strlen(da3);
-	for (int i = 0; i < lenc3; i++) {
-		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, da3[i]);
-	}
-	
-	
-	//draw the table
-	for (int i = 0; i<NUM_CUSHIONS; i++)
-	{	
-		
+	if (startgame == true) {
+		for (int i = 0; i < NUM_BALLS; i++)
+		{
+			if (i == 0) {
+
+				glPushMatrix();
+				glTranslatef(gTable.balls[i].position(0), (BALL_RADIUS / 2.0), gTable.balls[i].position(1));
+				glutSolidSphere(gTable.balls[i].radius, 32, 32);
+				glPopMatrix();
+				glColor3f(0.5, 0, 1.0);
+			}
+			else {
+				if (gTable.balls[i].touched == 0) {
+					GLUquadricObj* cylin = gluNewQuadric();
+					glPushMatrix();
+					glTranslatef(gTable.balls[i].position(0), (BALL_RADIUS / 2.0), gTable.balls[i].position(1));
+					GLUquadricObj* quadratic;
+					quadratic = gluNewQuadric();
+					glColor3f(1, 0, 0);
+					glPushMatrix();
+					glRotatef(90, -1, 0, 0);
+					glColor3f(1, 0, 0);
+					gluCylinder(quadratic, 0.05f, 0.01f, 0.2f, 32, 32);
+					glPopMatrix();
+
+
+					GLUquadricObj* ball;
+					ball = gluNewQuadric();
+					glPushMatrix();
+					glTranslatef(gTable.balls[i].position(0), (BALL_RADIUS)+0.19f, gTable.balls[i].position(1));
+					gluSphere(ball, 0.02f, 30, 30);
+					glPopMatrix();
+					/*
+					GLUquadricObj* ball2;
+					ball2 = gluNewQuadric();
+					glPushMatrix();
+					glTranslatef(gTable.balls[i].position(0), (BALL_RADIUS), gTable.balls[i].position(1) + 0.01);
+					gluSphere(ball2, 0.02f, 30, 30);
+					glPopMatrix();
+					*/
+				}
+				else {
+					GLUquadricObj* cylin = gluNewQuadric();
+					glPushMatrix();
+					glTranslatef(gTable.balls[i].position(0), (BALL_RADIUS), gTable.balls[i].position(1));
+					GLUquadricObj* quadratic;
+					quadratic = gluNewQuadric();
+					glColor3f(1, 0, 0);
+					glPushMatrix();
+					glRotatef(0, 1, 0, 0);
+					glColor3f(1, 1, 1);
+					gluCylinder(quadratic, 0.01f, 0.05f, 0.2f, 32, 32);
+					glPopMatrix();
+
+
+					GLUquadricObj* ball;
+					ball = gluNewQuadric();
+					glPushMatrix();
+					glTranslatef(gTable.balls[i].position(0), (BALL_RADIUS), gTable.balls[i].position(1));
+					gluSphere(ball, 0.02f, 30, 30);
+					glPopMatrix();
+				}
+
+
+			}
+		}
+
+
+
+		int gg = 0;
+		for (int i = 0; i < NUM_BALLS; i++)
+		{
+			if (gTable.balls[i].touched == 1) {
+				gg++;
+			}
+		}
+		if (gg == 10) {
+			char  strikechar[] = "Strike!";
+			glRasterPos2f(0.1f, 0.71f);
+			glColor3f(1., 0., 0.);
+			int lenx = strlen(strikechar);
+			for (int i = 0; i < lenx; i++) {
+				glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, strikechar[i]);
+			}
+			//std::this_thread::sleep_for(std::chrono::seconds(1));
+		}
+		if (Gameturn >= maxGameTurn) {
+			char  strikechariX[] = "Game Over!";
+			gameOver = true;
+			glRasterPos2f(0.0f, 0.61f);
+			glColor3f(1., 0., 0.);
+			int lenOi = strlen(strikechariX);
+			for (int i = 0; i < lenOi; i++) {
+				glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, strikechariX[i]);
+			}
+			char  whowon[2] = "";
+			char  resultx[] = " Wins!";
+			if (gTable.players[0].score > gTable.players[1].score) {
+
+				std::strcat(whowon, "1");
+			}
+			else {
+				std::strcat(whowon, "2");
+			}
+			char* newArray = new char[std::strlen("Player ") + std::strlen(whowon) + 1];
+			std::strcpy(newArray, "Player ");
+			std::strcat(newArray, whowon);
+			int len12 = strlen(resultx);
+			int len22 = strlen(newArray);
+			std::cout << lenOi << " str" << len12 << " res" << len22 << " who";
+
+			for (int j = 0; j < len22; j++) {
+				glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, newArray[j]);
+			}
+			for (int k = 0; k < len12; k++) {
+				glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, resultx[k]);
+			}
+		}
+
+		if (gTable.AnyBallsMoving() == false && nonRepeat == true) {
+			gTable.players[Gameturn % NUM_PLAYERS].score = gTable.players[Gameturn % NUM_PLAYERS].score + gg;
+			nonRepeat = false;
+			//std::cout <<" Soldier Boy " << gTable.players[Gameturn % NUM_PLAYERS].score;
+		}
+		//gTable.players[0].score = gTable.players[0].score + gg;
+
+
+		char  da1[20] = "0";
+		itoa(gTable.players[0].score, da1, 10);
+		glRasterPos2f(-0.6f, 0.7f);
+		glColor3f(1., 0., 0.);
+		char  da2[20] = "player 1 Score :";
+		int lenc1 = strlen(da2);
+		for (int i = 0; i < lenc1; i++) {
+			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, da2[i]);
+		}
+		int lenc = strlen(da1);
+		for (int i = 0; i < lenc; i++) {
+			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, da1[i]);
+		}
+
+		char  da3[20] = "0";
+		itoa(gTable.players[1].score, da3, 10);
+		glRasterPos2f(-0.6f, 0.8f);
+		glColor3f(1., 0., 0.);
+		char  da4[20] = "player 2 Score :";
+		int lenc2 = strlen(da4);
+		for (int i = 0; i < lenc2; i++) {
+			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, da4[i]);
+		}
+		int lenc3 = strlen(da3);
+		for (int i = 0; i < lenc3; i++) {
+			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, da3[i]);
+		}
+
+
+		//draw the table
+		for (int i = 0; i < NUM_CUSHIONS; i++)
+		{
+
 			glBegin(GL_LINE_LOOP);
-			glVertex3f (gTable.cushions[i].vertices[0](0), 0.0, gTable.cushions[i].vertices[0](1));
-			glVertex3f (gTable.cushions[i].vertices[0](0), 0.1, gTable.cushions[i].vertices[0](1));
-			glVertex3f (gTable.cushions[i].vertices[1](0), 0.1, gTable.cushions[i].vertices[1](1));
-			glVertex3f (gTable.cushions[i].vertices[1](0), 0.0, gTable.cushions[i].vertices[1](1));
+			glVertex3f(gTable.cushions[i].vertices[0](0), 0.0, gTable.cushions[i].vertices[0](1));
+			glVertex3f(gTable.cushions[i].vertices[0](0), 0.1, gTable.cushions[i].vertices[0](1));
+			glVertex3f(gTable.cushions[i].vertices[1](0), 0.1, gTable.cushions[i].vertices[1](1));
+			glVertex3f(gTable.cushions[i].vertices[1](0), 0.0, gTable.cushions[i].vertices[1](1));
 			glEnd();
-	}
-	for (int i = 0; i < NUM_CUSHIONS; i++)
-	{
+		}
+		for (int i = 0; i < NUM_CUSHIONS; i++)
+		{
 
+			glBegin(GL_LINE_LOOP);
+			glVertex3f(gLane.cushions[i].vertices[0](0), 0.0, gLane.cushions[i].vertices[0](1));
+			glVertex3f(gLane.cushions[i].vertices[0](0), 0.1, gLane.cushions[i].vertices[0](1));
+			glVertex3f(gLane.cushions[i].vertices[1](0), 0.1, gLane.cushions[i].vertices[1](1));
+			glVertex3f(gLane.cushions[i].vertices[1](0), 0.0, gLane.cushions[i].vertices[1](1));
+			glEnd();
+		}
+
+		for (int i = 0; i < gTable.parts.num; i++)
+		{
+			glColor3f(1.0, 0.0, 0.0);
+			glPushMatrix();
+			glTranslatef(gTable.parts.particles[i]->position(0), gTable.parts.particles[i]->position(1), gTable.parts.particles[i]->position(2));
+#if DRAW_SOLID
+			glutSolidSphere(0.002f, 32, 32);
+#else
+			glutWireSphere(0.002f, 12, 12);
+#endif
+			glPopMatrix();
+		}
+		/*
 		glBegin(GL_LINE_LOOP);
-		glVertex3f(gLane.cushions[i].vertices[0](0), 0.0, gLane.cushions[i].vertices[0](1));
-		glVertex3f(gLane.cushions[i].vertices[0](0), 0.1, gLane.cushions[i].vertices[0](1));
-		glVertex3f(gLane.cushions[i].vertices[1](0), 0.1, gLane.cushions[i].vertices[1](1));
-		glVertex3f(gLane.cushions[i].vertices[1](0), 0.0, gLane.cushions[i].vertices[1](1));
+		glVertex3f (TABLE_X, 0.0, -TABLE_Z);
+		glVertex3f (TABLE_X, 0.1, -TABLE_Z);
+		glVertex3f (TABLE_X, 0.1, TABLE_Z);
+		glVertex3f (TABLE_X, 0.0, TABLE_Z);
 		glEnd();
-	}
-
-	for(int i=0;i<gTable.parts.num;i++)
-	{
-		glColor3f(1.0,0.0,0.0);
-		glPushMatrix();
-		glTranslatef(gTable.parts.particles[i]->position(0),gTable.parts.particles[i]->position(1),gTable.parts.particles[i]->position(2));
-		#if DRAW_SOLID
-		glutSolidSphere(0.002f,32,32);
-		#else
-		glutWireSphere(0.002f,12,12);
-		#endif
-		glPopMatrix();		
-	}
-	/*
-	glBegin(GL_LINE_LOOP);
-	glVertex3f (TABLE_X, 0.0, -TABLE_Z);
-	glVertex3f (TABLE_X, 0.1, -TABLE_Z);
-	glVertex3f (TABLE_X, 0.1, TABLE_Z);
-	glVertex3f (TABLE_X, 0.0, TABLE_Z);
-	glEnd();
-	glBegin(GL_LINE_LOOP);
-	glVertex3f (TABLE_X, 0.0, -TABLE_Z);
-	glVertex3f (TABLE_X, 0.1, -TABLE_Z);
-	glVertex3f (-TABLE_X, 0.1, -TABLE_Z);
-	glVertex3f (-TABLE_X, 0.0, -TABLE_Z);
-	glEnd();
-	glBegin(GL_LINE_LOOP);
-	glVertex3f (TABLE_X, 0.0, TABLE_Z);
-	glVertex3f (TABLE_X, 0.1, TABLE_Z);
-	glVertex3f (-TABLE_X, 0.1, TABLE_Z);
-	glVertex3f (-TABLE_X, 0.0, TABLE_Z);
-	glEnd();
-	*/
-
-	//draw the cue
-	if(gDoCue)
-	{
-		glBegin(GL_LINES);
-		float cuex = sin(gCueAngle) * gCuePower;
-		float cuez = cos(gCueAngle) * gCuePower;
-		glColor3f(1.0,0.0,0.0);
-		glVertex3f (gTable.balls[0].position(0), (BALL_RADIUS/2.0f), gTable.balls[0].position(1));
-		glVertex3f ((gTable.balls[0].position(0)+cuex), (BALL_RADIUS/2.0f), (gTable.balls[0].position(1)+cuez));
-		glColor3f(1.0,0,0);
+		glBegin(GL_LINE_LOOP);
+		glVertex3f (TABLE_X, 0.0, -TABLE_Z);
+		glVertex3f (TABLE_X, 0.1, -TABLE_Z);
+		glVertex3f (-TABLE_X, 0.1, -TABLE_Z);
+		glVertex3f (-TABLE_X, 0.0, -TABLE_Z);
 		glEnd();
+		glBegin(GL_LINE_LOOP);
+		glVertex3f (TABLE_X, 0.0, TABLE_Z);
+		glVertex3f (TABLE_X, 0.1, TABLE_Z);
+		glVertex3f (-TABLE_X, 0.1, TABLE_Z);
+		glVertex3f (-TABLE_X, 0.0, TABLE_Z);
+		glEnd();
+		*/
+
+		//draw the cue
+		if (gDoCue)
+		{
+			glBegin(GL_LINES);
+			float cuex = sin(gCueAngle) * gCuePower;
+			float cuez = cos(gCueAngle) * gCuePower;
+			glColor3f(1.0, 0.0, 0.0);
+			glVertex3f(gTable.balls[0].position(0), (BALL_RADIUS / 2.0f), gTable.balls[0].position(1));
+			glVertex3f((gTable.balls[0].position(0) + cuex), (BALL_RADIUS / 2.0f), (gTable.balls[0].position(1) + cuez));
+			glColor3f(1.0, 0, 0);
+			glEnd();
+		}
+
+		//glPopMatrix();
+
 	}
-
-	//glPopMatrix();
-
 	glFlush();
 	glutSwapBuffers();
+	
+	
 }
+
 
 void SpecKeyboardFunc(int key, int x, int y) 
 {
@@ -451,7 +633,52 @@ void KeyboardFunc(unsigned char key, int x, int y)
 {
 	switch(key)
 	{
+	case('w'):
+		{
+			if (welcomeOn == true)
+			{
+				if (chosenMode == false) {
+					playOffline = true;
+					std::cout << "playOffline";
+				}
+				else {
+					collectionMode = true;
+					std::cout << "host";
+				}
+				
+			}
+			break;
+		}	
+	case('s'):
+		{
+			if (welcomeOn == true)
+			{
+				if (chosenMode == false) {
+					playOffline = false;
+					std::cout << "playOfflinefalse";
+				}
+				else {
+					collectionMode = false;
+					std::cout << "join";
+				}
+			
+			}
+			break;
+
+		}
 	case(13):
+	{
+	
+		if (chosenMode == false) {
+			chosenMode = true;
+		}
+		else {
+			chooseRoleDone = true;
+		}		
+		break;
+
+	}
+	case(32):
 		{
 			if(gDoCue)
 			{
@@ -475,7 +702,7 @@ void KeyboardFunc(unsigned char key, int x, int y)
 			}
 			break;
 		}
-	case(32):
+	case('m'):
 		{
 			gCamRotate = false;
 			break;
@@ -490,7 +717,7 @@ void KeyboardFunc(unsigned char key, int x, int y)
 			gCamR = true;
 			break;
 		}
-	case('s'):
+	case('h'):
 		{
 			gCamU = true;
 			break;
@@ -512,7 +739,7 @@ void KeyboardFunc(unsigned char key, int x, int y)
 		}
 	case('q'):
 		{
-	
+		//welcomeOn = false;
 		if (gameOver == false) {
 			if (gTable.AnyBallsMoving() == false) {
 				nonRepeat = true;
@@ -551,7 +778,7 @@ void KeyboardUpFunc(unsigned char key, int x, int y)
 			gCamR = false;
 			break;
 		}
-	case('s'):
+	case('j'):
 		{
 			gCamU = false;
 			break;
@@ -597,6 +824,322 @@ void ChangeSize(int w, int h) {
 void viewScore() {
 	
 
+}
+int clientConnectfn(int argc, char** argv) {
+	bool dotheaction = false;
+	while (dotheaction == false) {
+		if (chooseRoleDone == true && collectionMode == false) {
+			dotheaction = true;
+			std::cout << "client connected";
+
+			WSADATA wsaData;
+			SOCKET ConnectSocket = INVALID_SOCKET;
+			struct addrinfo* result = NULL, * ptr = NULL, hints;
+			auto* sendbuf = "this is a test";
+			char recvbuf[DEFAULT_BUFLEN];
+			int iResult;
+			int iSendResult;
+			int recvbuflen = DEFAULT_BUFLEN;
+			printf(sendbuf);
+			// Validate the parameters
+			if (argc != 2) {
+				printf("usage: %s server-name\n", argv[0]);
+				//return 1;
+			}
+
+
+			// Initialize Winsock
+			iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+			if (iResult != 0) {
+				printf("WSAStartup failed with error: %d\n", iResult);
+				return 1;
+			}
+
+
+			ZeroMemory(&hints, sizeof(hints));
+			hints.ai_family = AF_UNSPEC;
+			hints.ai_socktype = SOCK_STREAM;
+			hints.ai_protocol = IPPROTO_TCP;
+
+			// Resolve the server address and port
+			iResult = getaddrinfo(argv[1], DEFAULT_PORT, &hints, &result);
+			if (iResult != 0) {
+				printf("getaddrinfo failed with error: %d\n", iResult);
+				WSACleanup();
+				return 1;
+			}
+
+			// Attempt to connect to an address until one succeeds
+			for (ptr = result; ptr != NULL; ptr = ptr->ai_next) {
+
+				// Create a SOCKET for connecting to server
+				ConnectSocket = socket(ptr->ai_family, ptr->ai_socktype,
+					ptr->ai_protocol);
+				if (ConnectSocket == INVALID_SOCKET) {
+					printf("socket failed with error: %ld\n", WSAGetLastError());
+					WSACleanup();
+					return 1;
+				}
+
+				// Connect to server.
+				iResult = connect(ConnectSocket, ptr->ai_addr, (int)ptr->ai_addrlen);
+				if (iResult == SOCKET_ERROR) {
+					closesocket(ConnectSocket);
+					ConnectSocket = INVALID_SOCKET;
+					continue;
+				}
+				break;
+			}
+
+			freeaddrinfo(result);
+
+			if (ConnectSocket == INVALID_SOCKET) {
+				printf("Unable to connect to server!\n");
+				WSACleanup();
+				return 1;
+			}
+
+
+
+			std::cout << "STILL Connected!" << std::endl;
+
+			while (true) {
+				printf("Client: ");
+
+				fgets(recvbuf, 255, stdin);
+				iResult = send(ConnectSocket, recvbuf, sizeof(recvbuf), 0);
+				if (iResult == SOCKET_ERROR) {
+					printf("send failed with error: %d\n", WSAGetLastError());
+					closesocket(ConnectSocket);
+					WSACleanup();
+					return 1;
+				}
+
+				iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
+				if (iResult > 0)
+					printf("Server says: %s\n", recvbuf);
+
+
+			}
+
+			// Receive until the peer shuts down the connection
+			do {
+
+				iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
+				if (iResult > 0) {
+					//printf("Bytes received: %d\n", iResult);
+					printf("Client says: %s\n", recvbuf);
+
+					// Echo the buffer back to the sender
+					std::string reply = "Did you say '";
+					reply += recvbuf;
+					reply += "'?";
+					iSendResult = send(ConnectSocket, reply.c_str(), iResult, 0);
+					if (iSendResult == SOCKET_ERROR) {
+						printf("send failed with error: %d\n", WSAGetLastError());
+						closesocket(ConnectSocket);
+						WSACleanup();
+						return 1;
+					}
+
+
+					//printf("Bytes sent: %d\n", iSendResult);
+				}
+				else if (iResult == 0)
+					printf("Connection closing...\n");
+				else {
+					printf("recv failed with error: %d\n", WSAGetLastError());
+					closesocket(ConnectSocket);
+					WSACleanup();
+					return 1;
+				}
+
+			} while (iResult > 0);
+
+			// cleanup
+			closesocket(ConnectSocket);
+			WSACleanup();
+
+			return 0;
+
+}
+	}
+	
+
+
+}
+int serverConnectfn(void) {
+	bool dotheaction = false;
+	while (dotheaction == false) {
+		if (chooseRoleDone == true && collectionMode == true) {
+			dotheaction = true;
+			std::cout << "connected";
+			WSADATA wsaData;
+			int iResult;
+
+			SOCKET ListenSocket = INVALID_SOCKET;
+			SOCKET ClientSocket = INVALID_SOCKET;
+
+			struct addrinfo* result = NULL;
+			struct addrinfo hints;
+
+			int iSendResult;
+			char recvbuf[DEFAULT_BUFLEN];
+			int recvbuflen = DEFAULT_BUFLEN;
+
+			// Initialize Winsock
+			iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+			if (iResult != 0) {
+				printf("WSAStartup failed with error: %d\n", iResult);
+				return 1;
+			}
+
+
+			ZeroMemory(&hints, sizeof(hints));
+			hints.ai_family = AF_INET;
+			hints.ai_socktype = SOCK_STREAM;
+			hints.ai_protocol = IPPROTO_TCP;
+			hints.ai_flags = AI_PASSIVE;
+
+			// Resolve the server address and port
+			iResult = getaddrinfo(NULL, DEFAULT_PORT, &hints, &result);
+			if (iResult != 0) {
+				printf("getaddrinfo failed with error: %d\n", iResult);
+
+				WSACleanup();
+				return 1;
+			}
+
+
+
+			// Create a SOCKET for connecting to server
+			ListenSocket = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
+			if (ListenSocket == INVALID_SOCKET) {
+				printf("socket failed with error: %ld\n", WSAGetLastError());
+				freeaddrinfo(result);
+				WSACleanup();
+				return 1;
+			}
+
+			// Setup the TCP listening socket
+			iResult = bind(ListenSocket, result->ai_addr, (int)result->ai_addrlen);
+			if (iResult == SOCKET_ERROR) {
+				printf("bind failed with error: %d\n", WSAGetLastError());
+				freeaddrinfo(result);
+				closesocket(ListenSocket);
+				WSACleanup();
+				return 1;
+			}
+
+
+
+			freeaddrinfo(result);
+
+			iResult = listen(ListenSocket, SOMAXCONN);
+			if (iResult == SOCKET_ERROR) {
+				printf("listen failed with error: %d\n", WSAGetLastError());
+				closesocket(ListenSocket);
+				WSACleanup();
+				return 1;
+			}
+
+
+
+			// Accept a client socket
+			ClientSocket = accept(ListenSocket, NULL, NULL);
+			if (ClientSocket == INVALID_SOCKET) {
+				printf("accept failed with error: %d\n", WSAGetLastError());
+				closesocket(ListenSocket);
+				WSACleanup();
+				return 1;
+			}
+
+
+			// No longer need server socket
+			//closesocket(ListenSocket);
+
+
+
+			while (true) {
+				printf("Client: ");
+				//bzero(buffer, 256);
+				fgets(recvbuf, 255, stdin);
+				//int n = write(sockfd, buffer, strlen(buffer)�1);
+				//if (n < 0)
+				//	msg("ERROR writing to socket");
+				iResult = send(ClientSocket, recvbuf, sizeof(recvbuf), 0);
+				if (iResult == SOCKET_ERROR) {
+					printf("send failed with error: %d\n", WSAGetLastError());
+					closesocket(ClientSocket);
+					WSACleanup();
+					return 1;
+				}
+
+				//bzero(buffer, 256);
+				//n = read(sockfd, buffer, 255);
+				//if (n < 0) msg("ERROR reading from socket");
+				//printf("%s\n", buffer);
+				iResult = recv(ClientSocket, recvbuf, recvbuflen, 0);
+				if (iResult > 0)
+					printf("Server says: %s\n", recvbuf);
+				//printf("Bytes received: %d\n", iResult);
+
+			}
+
+			// shutdown the connection since we're done
+			iResult = shutdown(ClientSocket, SD_SEND);
+			if (iResult == SOCKET_ERROR) {
+				printf("shutdown failed with error: %d\n", WSAGetLastError());
+				closesocket(ClientSocket);
+				WSACleanup();
+				return 1;
+			}
+			// Receive until the peer shuts down the connection
+			do {
+
+				iResult = recv(ClientSocket, recvbuf, recvbuflen, 0);
+				if (iResult > 0) {
+					//printf("Bytes received: %d\n", iResult);
+					printf("Client says: %s\n", recvbuf);
+					vec2 imp((-sin(gCueAngle) * gCuePower * gCueBallFactor),
+						(-cos(gCueAngle) * gCuePower * gCueBallFactor));
+				
+						gTable.balls[0].ApplyImpulse(imp);
+					
+					// Echo the buffer back to the sender
+					std::string reply = "Did you say '";
+					reply += recvbuf;
+					reply += "'?";
+					iSendResult = send(ClientSocket, reply.c_str(), iResult, 0);
+					if (iSendResult == SOCKET_ERROR) {
+						printf("send failed with error: %d\n", WSAGetLastError());
+						closesocket(ClientSocket);
+						WSACleanup();
+						return 1;
+					}
+
+
+					//printf("Bytes sent: %d\n", iSendResult);
+				}
+				else if (iResult == 0)
+					printf("Connection closing...\n");
+				else {
+					printf("recv failed with error: %d\n", WSAGetLastError());
+					closesocket(ClientSocket);
+					WSACleanup();
+					return 1;
+				}
+
+			} while (iResult > 0);
+			// cleanup
+			closesocket(ClientSocket);
+			WSACleanup();
+
+			return 0;
+		}
+	}
+
+	
 }
 
 void InitLights(void)
@@ -646,10 +1189,19 @@ void UpdateScene(int ms)
 	glutPostRedisplay();
 }
 
-int _tmain(int argc, _TCHAR* argv[])
+int _tmain(int argc, char** argv)
 {
+	
 	gTable.SetupCushions();
 	gLane.SetupCushions();
+
+
+	std::thread t1(serverConnectfn);
+	std::thread t2(clientConnectfn,argc, argv);
+
+
+
+	
 
 	glutInit(&argc, ((char **)argv));
 	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE| GLUT_RGBA);
@@ -657,14 +1209,18 @@ int _tmain(int argc, _TCHAR* argv[])
 	glutInitWindowSize(1000,700);
 	//glutFullScreen();
 	glutCreateWindow("Bowling");
-
+	
 	InitLights();
 	glutDisplayFunc(RenderScene);
 	glutTimerFunc(SIM_UPDATE_MS, UpdateScene, SIM_UPDATE_MS);
 	glutReshapeFunc(ChangeSize);
 	glutIdleFunc(RenderScene);
 	//viewScore();
-	
+
+	//clientConnectfn(argc, argv);
+	//serverConnectfn();
+
+
 	glutIgnoreKeyRepeat(1);
 	glutKeyboardFunc(KeyboardFunc);
 	glutKeyboardUpFunc(KeyboardUpFunc);
@@ -672,4 +1228,6 @@ int _tmain(int argc, _TCHAR* argv[])
 	glutSpecialUpFunc(SpecKeyboardUpFunc);
 	glEnable(GL_DEPTH_TEST);
 	glutMainLoop();
+
+	
 }
