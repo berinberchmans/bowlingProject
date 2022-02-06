@@ -27,6 +27,7 @@
 #include <stdlib.h>   
 #include <time.h> 
 #include<windows.h>
+#include <sstream>
 
 #include <thread>         // std::this_thread::sleep_for
 #include <chrono>     
@@ -47,8 +48,16 @@ bool welcomeOn = true;
 bool playOffline = true;
 bool chosenMode = false;
 bool startgame = false;
+bool startMultiplayer = false;
 bool chooseRoleDone = false;
 bool collectionMode = true;
+int pickedKey = 0;
+float gCueAnglePass = 0.0;
+float gCuePowerPass = 0.0;
+int identity = 0;
+
+bool canhitM = true;
+
 
 
 
@@ -62,6 +71,8 @@ float gCuePowerMax = 0.75;
 float gCuePowerMin = 0.1;
 float gCueBallFactor = 8.0;
 bool gDoCue = true;
+
+
 
 //camera variables
 vec3 gCamPos(0.0,0.7,2.1);
@@ -319,9 +330,11 @@ void RenderScene(void) {
 						glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c03[i]);
 					}
 					if (collectionMode == true) {
+						identity = 0;
 						glRasterPos2f(-0.38f, 0.41f);
 					}
 					else {
+						identity = 1;
 						glRasterPos2f(-0.38f, 0.31f);
 					}
 					//glRasterPos2f(-0.38f, 0.31f);
@@ -450,7 +463,7 @@ void RenderScene(void) {
 			std::strcat(newArray, whowon);
 			int len12 = strlen(resultx);
 			int len22 = strlen(newArray);
-			std::cout << lenOi << " str" << len12 << " res" << len22 << " who";
+			//std::cout << lenOi << " str" << len12 << " res" << len22 << " who";
 
 			for (int j = 0; j < len22; j++) {
 				glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, newArray[j]);
@@ -463,6 +476,265 @@ void RenderScene(void) {
 		if (gTable.AnyBallsMoving() == false && nonRepeat == true) {
 			gTable.players[Gameturn % NUM_PLAYERS].score = gTable.players[Gameturn % NUM_PLAYERS].score + gg;
 			nonRepeat = false;
+			//std::cout <<" Soldier Boy " << gTable.players[Gameturn % NUM_PLAYERS].score;
+		}
+		//gTable.players[0].score = gTable.players[0].score + gg;
+
+
+		char  da1[20] = "0";
+		itoa(gTable.players[0].score, da1, 10);
+		glRasterPos2f(-0.6f, 0.7f);
+		glColor3f(1., 0., 0.);
+		char  da2[20] = "player 1 Score :";
+		int lenc1 = strlen(da2);
+		for (int i = 0; i < lenc1; i++) {
+			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, da2[i]);
+		}
+		int lenc = strlen(da1);
+		for (int i = 0; i < lenc; i++) {
+			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, da1[i]);
+		}
+
+		char  da3[20] = "0";
+		itoa(gTable.players[1].score, da3, 10);
+		glRasterPos2f(-0.6f, 0.8f);
+		glColor3f(1., 0., 0.);
+		char  da4[20] = "player 2 Score :";
+		int lenc2 = strlen(da4);
+		for (int i = 0; i < lenc2; i++) {
+			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, da4[i]);
+		}
+		int lenc3 = strlen(da3);
+		for (int i = 0; i < lenc3; i++) {
+			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, da3[i]);
+		}
+
+		char  playerOnstage[20] = "You are Player";
+		char playeridv[] = "0";
+		int currentplayer = identity+1;
+		itoa(currentplayer, playeridv, 10);
+		glRasterPos2f(-0.2f, 0.8f);
+		glColor3f(1., 0., 0.);
+		std::string p10 = playerOnstage;
+		std::string p20 = playeridv;
+		std::string p30 = p10 + " " + p20;
+		int lenc20 = strlen(p30.c_str());
+		for (int i = 0; i < lenc20; i++) {
+			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, p30.c_str()[i]);
+		}
+		
+		char  playerOnstage1[] = "Playing now - Player";
+		char playeridv1[] = "0";
+		int currentplayer1 = (Gameturn % NUM_PLAYERS) + 1;
+		itoa(currentplayer1, playeridv1, 10);
+		glRasterPos2f(-0.2f, 0.7f);
+		glColor3f(1., 0., 0.);
+		std::string p101 = playerOnstage1;
+		std::string p201 = playeridv1;
+		std::string p301 = p101 + " " + p201;
+		int lenc201 = strlen(p301.c_str());
+		for (int i = 0; i < lenc201; i++) {
+			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, p301.c_str()[i]);
+		}
+
+
+
+
+		//draw the table
+		for (int i = 0; i < NUM_CUSHIONS; i++)
+		{
+
+			glBegin(GL_LINE_LOOP);
+			glVertex3f(gTable.cushions[i].vertices[0](0), 0.0, gTable.cushions[i].vertices[0](1));
+			glVertex3f(gTable.cushions[i].vertices[0](0), 0.1, gTable.cushions[i].vertices[0](1));
+			glVertex3f(gTable.cushions[i].vertices[1](0), 0.1, gTable.cushions[i].vertices[1](1));
+			glVertex3f(gTable.cushions[i].vertices[1](0), 0.0, gTable.cushions[i].vertices[1](1));
+			glEnd();
+		}
+		for (int i = 0; i < NUM_CUSHIONS; i++)
+		{
+
+			glBegin(GL_LINE_LOOP);
+			glVertex3f(gLane.cushions[i].vertices[0](0), 0.0, gLane.cushions[i].vertices[0](1));
+			glVertex3f(gLane.cushions[i].vertices[0](0), 0.1, gLane.cushions[i].vertices[0](1));
+			glVertex3f(gLane.cushions[i].vertices[1](0), 0.1, gLane.cushions[i].vertices[1](1));
+			glVertex3f(gLane.cushions[i].vertices[1](0), 0.0, gLane.cushions[i].vertices[1](1));
+			glEnd();
+		}
+
+		for (int i = 0; i < gTable.parts.num; i++)
+		{
+			glColor3f(1.0, 0.0, 0.0);
+			glPushMatrix();
+			glTranslatef(gTable.parts.particles[i]->position(0), gTable.parts.particles[i]->position(1), gTable.parts.particles[i]->position(2));
+#if DRAW_SOLID
+			glutSolidSphere(0.002f, 32, 32);
+#else
+			glutWireSphere(0.002f, 12, 12);
+#endif
+			glPopMatrix();
+		}
+		/*
+		glBegin(GL_LINE_LOOP);
+		glVertex3f (TABLE_X, 0.0, -TABLE_Z);
+		glVertex3f (TABLE_X, 0.1, -TABLE_Z);
+		glVertex3f (TABLE_X, 0.1, TABLE_Z);
+		glVertex3f (TABLE_X, 0.0, TABLE_Z);
+		glEnd();
+		glBegin(GL_LINE_LOOP);
+		glVertex3f (TABLE_X, 0.0, -TABLE_Z);
+		glVertex3f (TABLE_X, 0.1, -TABLE_Z);
+		glVertex3f (-TABLE_X, 0.1, -TABLE_Z);
+		glVertex3f (-TABLE_X, 0.0, -TABLE_Z);
+		glEnd();
+		glBegin(GL_LINE_LOOP);
+		glVertex3f (TABLE_X, 0.0, TABLE_Z);
+		glVertex3f (TABLE_X, 0.1, TABLE_Z);
+		glVertex3f (-TABLE_X, 0.1, TABLE_Z);
+		glVertex3f (-TABLE_X, 0.0, TABLE_Z);
+		glEnd();
+		*/
+
+		//draw the cue
+		if (gDoCue)
+		{
+			glBegin(GL_LINES);
+			float cuex = sin(gCueAngle) * gCuePower;
+			float cuez = cos(gCueAngle) * gCuePower;
+			glColor3f(1.0, 0.0, 0.0);
+			glVertex3f(gTable.balls[0].position(0), (BALL_RADIUS / 2.0f), gTable.balls[0].position(1));
+			glVertex3f((gTable.balls[0].position(0) + cuex), (BALL_RADIUS / 2.0f), (gTable.balls[0].position(1) + cuez));
+			glColor3f(1.0, 0, 0);
+			glEnd();
+		}
+
+		//glPopMatrix();
+
+	}
+
+	if (startMultiplayer == true) {
+		for (int i = 0; i < NUM_BALLS; i++)
+		{
+			if (i == 0) {
+
+				glPushMatrix();
+				glTranslatef(gTable.balls[i].position(0), (BALL_RADIUS / 2.0), gTable.balls[i].position(1));
+				glutSolidSphere(gTable.balls[i].radius, 32, 32);
+				glPopMatrix();
+				glColor3f(0.5, 0, 1.0);
+			}
+			else {
+				if (gTable.balls[i].touched == 0) {
+					GLUquadricObj* cylin = gluNewQuadric();
+					glPushMatrix();
+					glTranslatef(gTable.balls[i].position(0), (BALL_RADIUS / 2.0), gTable.balls[i].position(1));
+					GLUquadricObj* quadratic;
+					quadratic = gluNewQuadric();
+					glColor3f(1, 0, 0);
+					glPushMatrix();
+					glRotatef(90, -1, 0, 0);
+					glColor3f(1, 0, 0);
+					gluCylinder(quadratic, 0.05f, 0.01f, 0.2f, 32, 32);
+					glPopMatrix();
+
+
+					GLUquadricObj* ball;
+					ball = gluNewQuadric();
+					glPushMatrix();
+					glTranslatef(gTable.balls[i].position(0), (BALL_RADIUS)+0.19f, gTable.balls[i].position(1));
+					gluSphere(ball, 0.02f, 30, 30);
+					glPopMatrix();
+					/*
+					GLUquadricObj* ball2;
+					ball2 = gluNewQuadric();
+					glPushMatrix();
+					glTranslatef(gTable.balls[i].position(0), (BALL_RADIUS), gTable.balls[i].position(1) + 0.01);
+					gluSphere(ball2, 0.02f, 30, 30);
+					glPopMatrix();
+					*/
+				}
+				else {
+					GLUquadricObj* cylin = gluNewQuadric();
+					glPushMatrix();
+					glTranslatef(gTable.balls[i].position(0), (BALL_RADIUS), gTable.balls[i].position(1));
+					GLUquadricObj* quadratic;
+					quadratic = gluNewQuadric();
+					glColor3f(1, 0, 0);
+					glPushMatrix();
+					glRotatef(0, 1, 0, 0);
+					glColor3f(1, 1, 1);
+					gluCylinder(quadratic, 0.01f, 0.05f, 0.2f, 32, 32);
+					glPopMatrix();
+
+
+					GLUquadricObj* ball;
+					ball = gluNewQuadric();
+					glPushMatrix();
+					glTranslatef(gTable.balls[i].position(0), (BALL_RADIUS), gTable.balls[i].position(1));
+					gluSphere(ball, 0.02f, 30, 30);
+					glPopMatrix();
+				}
+
+
+			}
+		}
+
+
+
+		int gg = 0;
+		for (int i = 0; i < NUM_BALLS; i++)
+		{
+			if (gTable.balls[i].touched == 1) {
+				gg++;
+			}
+		}
+		if (gg == 10) {
+			char  strikechar[] = "Strike!";
+			glRasterPos2f(0.1f, 0.71f);
+			glColor3f(1., 0., 0.);
+			int lenx = strlen(strikechar);
+			for (int i = 0; i < lenx; i++) {
+				glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, strikechar[i]);
+			}
+			//std::this_thread::sleep_for(std::chrono::seconds(1));
+		}
+		if (Gameturn >= maxGameTurn) {
+			char  strikechariX[] = "Game Over!";
+			gameOver = true;
+			glRasterPos2f(0.0f, 0.61f);
+			glColor3f(1., 0., 0.);
+			int lenOi = strlen(strikechariX);
+			for (int i = 0; i < lenOi; i++) {
+				glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, strikechariX[i]);
+			}
+			char  whowon[2] = "";
+			char  resultx[] = " Wins!";
+			if (gTable.players[0].score > gTable.players[1].score) {
+
+				std::strcat(whowon, "1");
+			}
+			else {
+				std::strcat(whowon, "2");
+			}
+			char* newArray = new char[std::strlen("Player ") + std::strlen(whowon) + 1];
+			std::strcpy(newArray, "Player ");
+			std::strcat(newArray, whowon);
+			int len12 = strlen(resultx);
+			int len22 = strlen(newArray);
+			//std::cout << lenOi << " str" << len12 << " res" << len22 << " who";
+
+			for (int j = 0; j < len22; j++) {
+				glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, newArray[j]);
+			}
+			for (int k = 0; k < len12; k++) {
+				glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, resultx[k]);
+			}
+		}
+
+		if (gTable.AnyBallsMoving() == false && nonRepeat == true) {
+			gTable.players[Gameturn % NUM_PLAYERS].score = gTable.players[Gameturn % NUM_PLAYERS].score + gg;
+			nonRepeat = false;
+			canhitM = true;
 			//std::cout <<" Soldier Boy " << gTable.players[Gameturn % NUM_PLAYERS].score;
 		}
 		//gTable.players[0].score = gTable.players[0].score + gg;
@@ -581,21 +853,73 @@ void SpecKeyboardFunc(int key, int x, int y)
 	{
 		case GLUT_KEY_LEFT:
 		{
-			gCueControl[0] = true;
+			/*if (playOffline == true) {
+				gCueControl[0] = true;
+			}
+			else {
+				if (Gameturn % NUM_PLAYERS == 0) {
+					gCueControl[0] = true;
+					pickedKey = 2;
+				}
+				else {
+					pickedKey = 2;
+				}
+			}*/
+			gCueControl[0] = true;			
 			break;
 		}
 		case GLUT_KEY_RIGHT:
 		{
+
+			/*if (playOffline == true) {
+				gCueControl[1] = true;
+			}
+			else {
+				if (Gameturn % NUM_PLAYERS == 0) {
+					gCueControl[1] = true;
+					pickedKey = 3;
+				}
+				else {
+					pickedKey = 3;
+				}
+			}*/
 			gCueControl[1] = true;
 			break;
 		}
 		case GLUT_KEY_UP:
 		{
+
+				/*if (playOffline == true) {
+				gCueControl[2] = true;
+			}
+			else {
+				if (Gameturn % NUM_PLAYERS == 0) {
+					gCueControl[2] = true;
+					std::cout << "going up";
+					pickedKey = 4;
+				}
+				else {
+					pickedKey = 4;
+				}
+			}*/
 			gCueControl[2] = true;
 			break;
 		}
 		case GLUT_KEY_DOWN:
 		{
+
+				/*if (playOffline == true) {
+				gCueControl[3] = true;
+			}
+			else {
+				if (Gameturn % NUM_PLAYERS == 0) {
+					gCueControl[3] = true;
+					pickedKey = 5;
+				}
+				else {
+					pickedKey = 5;
+				}
+			}*/
 			gCueControl[3] = true;
 			break;
 		}
@@ -609,21 +933,25 @@ void SpecKeyboardUpFunc(int key, int x, int y)
 		case GLUT_KEY_LEFT:
 		{
 			gCueControl[0] = false;
+			
 			break;
 		}
 		case GLUT_KEY_RIGHT:
 		{
 			gCueControl[1] = false;
+			
 			break;
 		}
 		case GLUT_KEY_UP:
 		{
 			gCueControl[2] = false;
+			
 			break;
 		}
 		case GLUT_KEY_DOWN:
 		{
 			gCueControl[3] = false;
+			
 			break;
 		}
 	}
@@ -682,13 +1010,52 @@ void KeyboardFunc(unsigned char key, int x, int y)
 		{
 			if(gDoCue)
 			{
-				vec2 imp(	(-sin(gCueAngle) * gCuePower * gCueBallFactor),
-							(-cos(gCueAngle) * gCuePower * gCueBallFactor));
-				if (gameOver == false && canhit == true) {
-					gTable.balls[0].ApplyImpulse(imp);
-					canhit = false;
-					nonRepeat = true;
+				if (playOffline == true) {
+					vec2 imp((-sin(gCueAngle) * gCuePower * gCueBallFactor),
+						(-cos(gCueAngle) * gCuePower * gCueBallFactor));
+					if (gameOver == false && canhit == true) {
+						gTable.balls[0].ApplyImpulse(imp);
+						canhit = false;
+						nonRepeat = true;
+					}
 				}
+				else {
+					if (Gameturn % NUM_PLAYERS == identity) {
+						vec2 imp((-sin(gCueAngle) * gCuePower * gCueBallFactor),
+							(-cos(gCueAngle) * gCuePower * gCueBallFactor));
+						if (gameOver == false && canhit == true) {
+							gTable.balls[0].ApplyImpulse(imp);
+							gCueAnglePass = gCueAngle;
+							gCuePowerPass = gCuePower;
+							canhit = false;
+							canhitM = true;
+							nonRepeat = true;
+						}
+						/*while (gTable.AnyBallsMoving() == true) {
+							//asd
+							std::cout << "ASD";
+						}
+						if (gameOver == false) {
+							if (gTable.AnyBallsMoving() == false) {
+								nonRepeat = true;
+								Gameturn++;
+								canhit = true;
+								canhitM = true;
+								gCueAnglePass = 0.0;
+								gCuePowerPass = 0.0;
+								//gCueAngle = 0.0;
+								//gCuePower = 0.0;
+								for (int i = 0; i < NUM_BALLS; i++)
+								{
+									gTable.balls[i].Reset();
+								}
+							}
+						}*/
+					}
+				}
+			
+				//gCueAnglePass = 0.0;
+				//gCuePowerPass = 0.0;
 				
 				
 			}
@@ -745,6 +1112,10 @@ void KeyboardFunc(unsigned char key, int x, int y)
 				nonRepeat = true;
 				Gameturn++;
 				canhit = true;
+				gCueAnglePass = 0.0;
+				gCuePowerPass = 0.0;
+				gCueAngle = 0.0;
+				gCuePower = 0.0;
 				for (int i = 0; i < NUM_BALLS; i++)
 				{
 					gTable.balls[i].Reset();
@@ -899,78 +1270,135 @@ int clientConnectfn(int argc, char** argv) {
 				return 1;
 			}
 
+			
 
+			
 
-			//std::cout << "STILL Connected!" << std::endl;
-
-			//if (Gameturn % NUM_PLAYERS == 0) {
-				
+		
 				// Receive until the peer shuts down the connection
-				do {
-					std::cout << "Revieving Msg" << std::endl;
-					iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
-					if (iResult > 0) {
-						//printf("Bytes received: %d\n", iResult);
-						printf("Server says: %s\n", recvbuf);
-						vec2 imp((-sin(gCueAngle) * gCuePower * gCueBallFactor),
-							(-cos(gCueAngle) * gCuePower * gCueBallFactor));
-						//std::string checkval = std::string(recvbuf);
-						
-						if (strcmp(recvbuf, "go") == 0) {
-							std::cout << recvbuf<< "ccc Recieved" << std::endl;
-							gTable.balls[0].ApplyImpulse(imp);
+				//iResult = 1;
+				while(true) {
+					
+						//std::cout << " Client what happened";
+						char msgc[] = "0.0";
+						char powergc[] = "0.0";
+						char pssval[] = "0.0";
+
+						// creating stringstream objects
+						std::stringstream ss1;
+						std::stringstream ss2;
+
+						// assigning the value of num_float to ss1
+						ss1 << gCueAnglePass;
+						ss2 << gCuePowerPass;
+
+						std::string str1 = ss1.str();
+						std::string str2 = ss2.str();
+						std::string p1 = str1;
+						std::string p2 = str2;
+						std::string p3 = p1 + ":" + p2;
+						if (Gameturn % NUM_PLAYERS == identity) {
+							//std::cout << "Client Connected!- sending" << std::endl;
+							iResult = send(ConnectSocket, p3.c_str(), sizeof(recvbuf), 0);
+							if (iResult == SOCKET_ERROR) {
+								printf("send failed with error: %d\n", WSAGetLastError());
+								closesocket(ConnectSocket);
+								WSACleanup();
+								return 1;
+							}
+
 						}
-						
-						// Echo the buffer back to the sender
-						std::string reply = "Did you say '";
-						reply += recvbuf;
-						reply += "'?";
-						iSendResult = send(ConnectSocket, reply.c_str(), iResult, 0);
-						if (iSendResult == SOCKET_ERROR) {
-							printf("send failed with error: %d\n", WSAGetLastError());
-							closesocket(ConnectSocket);
-							WSACleanup();
-							return 1;
+						else {
+							//if(Gameturn == 2) std::cout << "Client Connected! - recieving" << std::endl;
+							iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
+							if (iResult > 0) {
+
+								// finding the gCueAngle and gCuePower
+								std::string s = recvbuf;
+								std::string delimiter = ":";
+								size_t pos = 0;
+								std::string pangle;
+								std::string ppower;
+								while ((pos = s.find(delimiter)) != std::string::npos) {
+									pangle = s.substr(0, pos);
+
+									s.erase(0, pos + delimiter.length());
+								}
+								ppower = s;
+								double qangle = ::atof(pangle.c_str());
+								double qpower = ::atof(ppower.c_str());
+								gCueAngle = qangle;
+								gCuePower = qpower;
+								vec2 imp((-sin(gCueAngle) * gCuePower * gCueBallFactor),
+									(-cos(gCueAngle) * gCuePower * gCueBallFactor));
+								 std::cout  <<" --- " << canhitM << std::endl;
+								if (strcmp(recvbuf, "0:0") != 0) {
+									//if (Gameturn == 2) std::cout << "server says"<< recvbuf<<"------" << qangle << " --- " << qpower << " --- " << canhitM << std::endl;
+									if (canhitM == true) {
+										std::cout << "Enter inside" << std::endl;
+										gTable.balls[0].ApplyImpulse(imp);
+										gCueAngle = 0.0;
+										gCuePower = 0.0;
+										gCueAnglePass = 0.0;
+										gCuePowerPass = 0.0;
+										canhitM = false;
+										nonRepeat = true;
+									}
+									/*while (gTable.AnyBallsMoving() == true) {
+										//asd
+									}
+									if (gameOver == false) {
+										if (gTable.AnyBallsMoving() == false) {
+											nonRepeat = true;
+											Gameturn++;
+											canhit = true;
+											canhitM = true;
+											gCueAnglePass = 0.0;
+											gCuePowerPass = 0.0;
+											gCueAngle = 0.0;
+											gCuePower = 0.0;
+											for (int i = 0; i < NUM_BALLS; i++)
+											{
+												gTable.balls[i].Reset();
+											}
+										}
+									}*/
+
+								}
+								else {
+									canhitM = true;
+								}
+
+								// Echo the buffer back to the sender
+								/*std::string reply = "Did you say '";
+								reply += recvbuf;
+								reply += "'?";
+								iSendResult = send(ConnectSocket, reply.c_str(), iResult, 0);
+								if (iSendResult == SOCKET_ERROR) {
+									printf("send failed with error: %d\n", WSAGetLastError());
+									closesocket(ConnectSocket);
+									WSACleanup();
+									return 1;
+								}
+								*/
+
+							}
+							else if (iResult == 0)
+								printf("Connection closing...\n");
+							else {
+								printf("recv failed with error: %d\n", WSAGetLastError());
+								closesocket(ConnectSocket);
+								WSACleanup();
+								return 1;
+
+							}
+
 						}
 
-
-						//printf("Bytes sent: %d\n", iSendResult);
-					}
-					else if (iResult == 0)
-						printf("Connection closing...\n");
-					else {
-						printf("recv failed with error: %d\n", WSAGetLastError());
-						closesocket(ConnectSocket);
-						WSACleanup();
-						return 1;
-					}
-
-				} while (iResult > 0 && Gameturn % NUM_PLAYERS == 0);
-
-			//}
-			//else {
+					
+				} 
+		
 				
-				while (true && Gameturn % NUM_PLAYERS != 0) {
-					std::cout << "Sending Msg" << std::endl;
-					printf("Client: ");
-
-					fgets(recvbuf, 255, stdin);
-					iResult = send(ConnectSocket, recvbuf, sizeof(recvbuf), 0);
-					if (iResult == SOCKET_ERROR) {
-						printf("send failed with error: %d\n", WSAGetLastError());
-						closesocket(ConnectSocket);
-						WSACleanup();
-						return 1;
-					}
-
-					iResult = recv(ConnectSocket, recvbuf, recvbuflen, 0);
-					if (iResult > 0)
-						printf("Server says: %s\n", recvbuf);
-
-
-				}
-
-			//}
 		
 
 			
@@ -1075,71 +1503,143 @@ int serverConnectfn(void) {
 
 			// No longer need server socket
 			//closesocket(ListenSocket);
+			
 
-
-			//if (Gameturn % NUM_PLAYERS == 0) {
-				while (true && Gameturn % NUM_PLAYERS == 0) {
-					printf("Client: ");
-					//bzero(buffer, 256);
-					fgets(recvbuf, 255, stdin);
-					//int n = write(sockfd, buffer, strlen(buffer)�1);
-					//if (n < 0)
-					//	msg("ERROR writing to socket");
-					iResult = send(ClientSocket, "ddd", sizeof(recvbuf), 0);
-					if (iResult == SOCKET_ERROR) {
-						printf("send failed with error: %d\n", WSAGetLastError());
-						closesocket(ClientSocket);
-						WSACleanup();
-						return 1;
-					}
-
-					//bzero(buffer, 256);
-					//n = read(sockfd, buffer, 255);
-					//if (n < 0) msg("ERROR reading from socket");
-					//printf("%s\n", buffer);
-					iResult = recv(ClientSocket, recvbuf, recvbuflen, 0);
-					if (iResult > 0)
-						printf("Server says: %s\n", recvbuf);
-					//printf("Bytes received: %d\n", iResult);
-
-				}
-			//}
-			//else {
+				//iResult = 1;
 				// Receive until the peer shuts down the connection
-				do {
+				while(true) {
 
-					iResult = recv(ClientSocket, recvbuf, recvbuflen, 0);
-					if (iResult > 0) {
-						//printf("Bytes received: %d\n", iResult);
-						printf("Client says: %s\n", recvbuf);
 						
+					
+						char msgc[] = "0.0";
+						char powergc[] = "0.0";
+						char pssval[] = "0.0";
 
-						// Echo the buffer back to the sender
-						std::string reply = "Did you say '";
-						reply += recvbuf;
-						reply += "'?";
-						iSendResult = send(ClientSocket, reply.c_str(), iResult, 0);
-						if (iSendResult == SOCKET_ERROR) {
-							printf("send failed with error: %d\n", WSAGetLastError());
-							closesocket(ClientSocket);
-							WSACleanup();
-							return 1;
+
+						// creating stringstream objects
+						std::stringstream ss1;
+						std::stringstream ss2;
+
+						// assigning the value of num_float to ss1
+						ss1 << gCueAnglePass;
+
+						// assigning the value of num_float to ss2
+						ss2 << gCuePowerPass;
+
+						// initializing two string variables with the values of ss1 and ss2
+						// and converting it to string format with str() function
+						std::string str1 = ss1.str();
+						std::string str2 = ss2.str();
+
+						//itoa(gCueAnglePass, msgc, 10);
+						//itoa(gCuePowerPass, powergc, 10);
+						std::string p1 = str1;
+						std::string p2 = str2;
+						std::string p3 = p1 + ":" + p2;
+						if (Gameturn % NUM_PLAYERS == identity) {
+							std::cout << "Server Connected!- sending" << std::endl;
+							iResult = send(ClientSocket, p3.c_str(), sizeof(recvbuf), 0);
+							if (iResult == SOCKET_ERROR) {
+								printf("send failed with error: %d\n", WSAGetLastError());
+								closesocket(ClientSocket);
+								WSACleanup();
+								return 1;
+							}
+
+						}
+						else {
+							//std::cout << "Server Connected!- recieving" << std::endl;
+
+							iResult = recv(ClientSocket, recvbuf, recvbuflen, 0);
+							if (iResult > 0) {
+								std::string s = recvbuf;
+								std::string delimiter = ":";
+								size_t pos = 0;
+								std::string pangle;
+								std::string ppower;
+								while ((pos = s.find(delimiter)) != std::string::npos) {
+									pangle = s.substr(0, pos);
+
+									s.erase(0, pos + delimiter.length());
+								}
+								ppower = s;
+								double qangle = ::atof(pangle.c_str());
+								double qpower = ::atof(ppower.c_str());
+								gCueAngle = qangle;
+								gCuePower = qpower;
+								vec2 imp((-sin(gCueAngle) * gCuePower * gCueBallFactor),
+									(-cos(gCueAngle) * gCuePower * gCueBallFactor));
+								std::cout << " --- " << canhitM << std::endl;
+								if (strcmp(recvbuf, "0:0") != 0) {
+									//std::cout << "server says"<< recvbuf<<"------" << qangle << " --- " << qpower << " --- " << canhitM << std::endl;
+									if (canhitM == true) {
+										std::cout << "Enter inside" << std::endl;
+										gTable.balls[0].ApplyImpulse(imp);
+										gCueAngle = 0.0;
+										gCuePower = 0.0;
+										gCueAnglePass = 0.0;
+										gCuePowerPass = 0.0;
+										canhitM = false;
+										nonRepeat = true;
+									}
+									/*while (gTable.AnyBallsMoving() == true) {
+										//asd
+									}
+									if (gameOver == false) {
+										if (gTable.AnyBallsMoving() == false) {
+											nonRepeat = true;
+											Gameturn++;
+											canhit = true;
+											canhitM = true;
+											gCueAnglePass = 0.0;
+											gCuePowerPass = 0.0;
+											gCueAngle = 0.0;
+											gCuePower = 0.0;
+											for (int i = 0; i < NUM_BALLS; i++)
+											{
+												gTable.balls[i].Reset();
+											}
+										}
+									}*/
+
+								}
+								else {
+									canhitM = true;
+								}
+
+
+								// Echo the buffer back to the sender
+								/*std::string reply = "Did you say '";
+								reply += recvbuf;
+								reply += "'?";
+								iSendResult = send(ClientSocket, reply.c_str(), iResult, 0);
+								if (iSendResult == SOCKET_ERROR) {
+									printf("send failed with error: %d\n", WSAGetLastError());
+									closesocket(ClientSocket);
+									WSACleanup();
+									return 1;
+								}
+								*/
+
+							}
+							else if (iResult == 0)
+								printf("Connection closing...\n");
+							else {
+								printf("recv failed with error: %d\n", WSAGetLastError());
+								closesocket(ClientSocket);
+								WSACleanup();
+								return 1;
+							}
+
 						}
 
+			
 
-						//printf("Bytes sent: %d\n", iSendResult);
-					}
-					else if (iResult == 0)
-						printf("Connection closing...\n");
-					else {
-						printf("recv failed with error: %d\n", WSAGetLastError());
-						closesocket(ClientSocket);
-						WSACleanup();
-						return 1;
-					}
+				}
 
-				} while (iResult > 0 && Gameturn % NUM_PLAYERS != 0);
-			//}
+				
+		
+			
 			
 
 			// shutdown the connection since we're done
@@ -1219,7 +1719,8 @@ int _tmain(int argc, char** argv)
 	std::thread t1(serverConnectfn);
 	std::thread t2(clientConnectfn,argc, argv);
 
-
+	t1.detach();
+	t2.detach();
 
 	
 
