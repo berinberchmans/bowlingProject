@@ -24,6 +24,12 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="threaded_client.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="threaded_server.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="simulation.h">
@@ -37,6 +43,15 @@
     </ClInclude>
     <ClInclude Include="vecmath.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="threaded_client.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="threaded_server.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ThreadPool.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

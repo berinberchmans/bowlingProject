@@ -38,6 +38,20 @@
 #include<math.h>
 #include"simulation.h"
 
+//#include "threaded_client.h"
+//#include "threaded_server.h"
+
+/*namespace net {
+	Client client;
+	Server server;
+}*/
+namespace info {
+
+	SOCKET ListenSocketo;
+	SOCKET ClientSocketo;
+}
+
+
 
 int Gameturn = 0;
 int maxGameTurn = 4;
@@ -57,6 +71,9 @@ float gCuePowerPass = 0.0;
 int identity = 0;
 
 bool canhitM = true;
+
+
+bool sendMessage = false;
 
 
 
@@ -238,7 +255,138 @@ void RenderWelcome(void) {
 	glutSwapBuffers();
 
 }
+void connectServer() {
+	bool dotheaction = false;
+	while (dotheaction == false) {
+		if (chooseRoleDone == true && collectionMode == true) {
+			dotheaction = true;
 
+			WSADATA wsaData;
+			int iResult;
+
+			info::ListenSocketo = INVALID_SOCKET;
+			info::ClientSocketo = INVALID_SOCKET;
+
+			struct addrinfo* result = NULL;
+			struct addrinfo hints;
+
+			int iSendResult;
+			char recvbuf[DEFAULT_BUFLEN];
+			int recvbuflen = DEFAULT_BUFLEN;
+
+			// Initialize Winsock
+			iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+			if (iResult != 0) {
+				printf("WSAStartup failed with error: %d\n", iResult);
+				return;
+			}
+
+
+			ZeroMemory(&hints, sizeof(hints));
+			hints.ai_family = AF_INET;
+			hints.ai_socktype = SOCK_STREAM;
+			hints.ai_protocol = IPPROTO_TCP;
+			hints.ai_flags = AI_PASSIVE;
+
+			// Resolve the server address and port
+			iResult = getaddrinfo(NULL, DEFAULT_PORT, &hints, &result);
+			if (iResult != 0) {
+				printf("getaddrinfo failed with error: %d\n", iResult);
+
+				WSACleanup();
+				return;
+			}
+
+
+
+			// Create a SOCKET for connecting to server
+			info::ListenSocketo = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
+			if (info::ListenSocketo == INVALID_SOCKET) {
+				printf("socket failed with error: %ld\n", WSAGetLastError());
+				freeaddrinfo(result);
+				WSACleanup();
+				return;
+			}
+
+			// Setup the TCP listening socket
+			iResult = bind(info::ListenSocketo, result->ai_addr, (int)result->ai_addrlen);
+			if (iResult == SOCKET_ERROR) {
+				printf("bind failed with error: %d\n", WSAGetLastError());
+				freeaddrinfo(result);
+				closesocket(info::ListenSocketo);
+				WSACleanup();
+				return;
+			}
+
+
+
+			freeaddrinfo(result);
+
+			iResult = listen(info::ListenSocketo, SOMAXCONN);
+			if (iResult == SOCKET_ERROR) {
+				printf("listen failed with error: %d\n", WSAGetLastError());
+				closesocket(info::ListenSocketo);
+				WSACleanup();
+				return;
+			}
+
+
+
+			// Accept a client socket
+			info::ClientSocketo = accept(info::ListenSocketo, NULL, NULL);
+			if (info::ClientSocketo == INVALID_SOCKET) {
+				printf("accept failed with error: %d\n", WSAGetLastError());
+				closesocket(info::ListenSocketo);
+				WSACleanup();
+				return;
+			}
+
+			printf("getting here asdasd");
+		}
+	}
+	
+}
+
+void sendCommand(float gCueAnglePassval,float gCuePowerPassval) {
+	char recvbuf[DEFAULT_BUFLEN];
+	int recvbuflen = DEFAULT_BUFLEN;
+	int iResult;
+	char msgc[] = "0.0";
+	char powergc[] = "0.0";
+	char pssval[] = "0.0";
+
+
+	// creating stringstream objects
+	std::stringstream ss1;
+	std::stringstream ss2;
+
+	// assigning the value of num_float to ss1
+	ss1 << gCueAnglePassval;
+
+	// assigning the value of num_float to ss2
+	ss2 << gCuePowerPassval;
+
+	// initializing two string variables with the values of ss1 and ss2
+	// and converting it to string format with str() function
+	std::string str1 = ss1.str();
+	std::string str2 = ss2.str();
+
+	//itoa(gCueAnglePass, msgc, 10);
+	//itoa(gCuePowerPass, powergc, 10);
+	std::string p1 = str1;
+	std::string p2 = str2;
+	std::string p3 = p1 + ":" + p2;
+	std::cout << "Server Connected!- sending" << std::endl;
+			iResult = send(info::ClientSocketo, p3.c_str(), sizeof(recvbuf), 0);
+			if (iResult == SOCKET_ERROR) {
+				printf("send failed with error: %d\n", WSAGetLastError());
+				closesocket(info::ClientSocketo);
+				WSACleanup();
+				return;
+
+		}
+
+}
 void RenderScene(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -1030,6 +1178,8 @@ void KeyboardFunc(unsigned char key, int x, int y)
 							canhit = false;
 							canhitM = true;
 							nonRepeat = true;
+							sendMessage = true;
+							sendCommand(gCueAnglePass, gCuePowerPass);
 						}
 						/*while (gTable.AnyBallsMoving() == true) {
 							//asd
@@ -1192,10 +1342,7 @@ void ChangeSize(int w, int h) {
 	//gluLookAt(0.0,0.7,2.1, 0.0,0.0,0.0, 0.0f,1.0f,0.0f);
 	gluLookAt(gCamPos(0),gCamPos(1),gCamPos(2),gCamLookAt(0),gCamLookAt(1),gCamLookAt(2),0.0f,1.0f,0.0f);
 }
-void viewScore() {
-	
 
-}
 int clientConnectfn(int argc, char** argv) {
 	bool dotheaction = false;
 	while (dotheaction == false) {
@@ -1298,14 +1445,21 @@ int clientConnectfn(int argc, char** argv) {
 						std::string p2 = str2;
 						std::string p3 = p1 + ":" + p2;
 						if (Gameturn % NUM_PLAYERS == identity) {
-							//std::cout << "Client Connected!- sending" << std::endl;
-							iResult = send(ConnectSocket, p3.c_str(), sizeof(recvbuf), 0);
-							if (iResult == SOCKET_ERROR) {
-								printf("send failed with error: %d\n", WSAGetLastError());
-								closesocket(ConnectSocket);
-								WSACleanup();
-								return 1;
+							std::cout << "Client Connected!- sending" << std::endl;
+							if (sendMessage == true) {
+								std::cout << "SENDING  - IMPLULSEEE" << std::endl;
+								iResult = send(ConnectSocket, p3.c_str(), sizeof(recvbuf), 0);
+								if (iResult == SOCKET_ERROR) {
+									printf("send failed with error: %d\n", WSAGetLastError());
+									closesocket(ConnectSocket);
+									WSACleanup();
+									return 1;
+								}
+								if (strcmp(p3.c_str(), "0:0") != 0) {
+									sendMessage = false;
+								}
 							}
+							
 
 						}
 						else {
@@ -1331,9 +1485,9 @@ int clientConnectfn(int argc, char** argv) {
 								gCuePower = qpower;
 								vec2 imp((-sin(gCueAngle) * gCuePower * gCueBallFactor),
 									(-cos(gCueAngle) * gCuePower * gCueBallFactor));
-								 std::cout  <<" --- " << canhitM << std::endl;
+								std::cout  <<" --- " << canhitM << "------" << qangle << " --- " << qpower << std::endl;
 								if (strcmp(recvbuf, "0:0") != 0) {
-									//if (Gameturn == 2) std::cout << "server says"<< recvbuf<<"------" << qangle << " --- " << qpower << " --- " << canhitM << std::endl;
+									std::cout << "server says"<< recvbuf<<"------" << qangle << " --- " << qpower << " --- " << canhitM << std::endl;
 									if (canhitM == true) {
 										std::cout << "Enter inside" << std::endl;
 										gTable.balls[0].ApplyImpulse(imp);
@@ -1538,17 +1692,24 @@ int serverConnectfn(void) {
 						std::string p3 = p1 + ":" + p2;
 						if (Gameturn % NUM_PLAYERS == identity) {
 							std::cout << "Server Connected!- sending" << std::endl;
-							iResult = send(ClientSocket, p3.c_str(), sizeof(recvbuf), 0);
-							if (iResult == SOCKET_ERROR) {
-								printf("send failed with error: %d\n", WSAGetLastError());
-								closesocket(ClientSocket);
-								WSACleanup();
-								return 1;
+							if (sendMessage == true) {
+								iResult = send(ClientSocket, p3.c_str(), sizeof(recvbuf), 0);
+								if (iResult == SOCKET_ERROR) {
+									printf("send failed with error: %d\n", WSAGetLastError());
+									closesocket(ClientSocket);
+									WSACleanup();
+									return 1;
+								}
+								if (strcmp(p3.c_str(), "0:0") != 0) {
+									sendMessage = false;
+								}
+								
 							}
+							
 
 						}
 						else {
-							//std::cout << "Server Connected!- recieving" << std::endl;
+							std::cout << "Server Connected!- recieving" << std::endl;
 
 							iResult = recv(ClientSocket, recvbuf, recvbuflen, 0);
 							if (iResult > 0) {
@@ -1709,14 +1870,19 @@ void UpdateScene(int ms)
 	glutPostRedisplay();
 }
 
-int _tmain(int argc, char** argv)
+int _tmain(int argc, char *argv[])
 {
 	
 	gTable.SetupCushions();
 	gLane.SetupCushions();
 
+	//net::server.connect();
+	//net::client.start(argv[1], argv[2]);
 
-	std::thread t1(serverConnectfn);
+	
+
+	//td::thread t1(serverConnectfn);
+	std::thread t1(connectServer);
 	std::thread t2(clientConnectfn,argc, argv);
 
 	t1.detach();
@@ -1749,6 +1915,8 @@ int _tmain(int argc, char** argv)
 	glutSpecialUpFunc(SpecKeyboardUpFunc);
 	glEnable(GL_DEPTH_TEST);
 	glutMainLoop();
+
+	
 
 	
 }
