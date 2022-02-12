@@ -1,23 +1,28 @@
 ﻿cl : command line warning D9035: option 'Gm' has been deprecated and will be removed in a future release
   Pool Game.cpp
-D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(274,9): warning C4101: 'recvbuf': unreferenced local variable
-D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(273,8): warning C4101: 'iSendResult': unreferenced local variable
-D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(604,10): warning C4996: 'strcat': This function or variable may be unsafe. Consider using strcat_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(607,10): warning C4996: 'strcat': This function or variable may be unsafe. Consider using strcat_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(610,9): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(611,9): warning C4996: 'strcat': This function or variable may be unsafe. Consider using strcat_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(633,3): warning C4996: 'itoa': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _itoa. See online help for details.
-D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(647,3): warning C4996: 'itoa': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _itoa. See online help for details.
-D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(663,3): warning C4996: 'itoa': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _itoa. See online help for details.
-D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(677,3): warning C4996: 'itoa': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _itoa. See online help for details.
-D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(862,10): warning C4996: 'strcat': This function or variable may be unsafe. Consider using strcat_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(865,10): warning C4996: 'strcat': This function or variable may be unsafe. Consider using strcat_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(868,9): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(869,9): warning C4996: 'strcat': This function or variable may be unsafe. Consider using strcat_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(892,3): warning C4996: 'itoa': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _itoa. See online help for details.
-D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(906,3): warning C4996: 'itoa': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _itoa. See online help for details.
-D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(1359,8): warning C4101: 'iSendResult': unreferenced local variable
-D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(1586,8): warning C4101: 'iSendResult': unreferenced local variable
-D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(1824): warning C4715: 'serverConnectfn': not all control paths return a value
-D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(1570): warning C4715: 'clientConnectfn': not all control paths return a value
+D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(279,8): warning C4101: 'iSendResult': unreferenced local variable
+D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(424,8): warning C4101: 'iSendResult': unreferenced local variable
+D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(534,6): warning C4101: 'iSendResult': unreferenced local variable
+D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(614,10): warning C4101: 'wsaData': unreferenced local variable
+D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(618,6): warning C4101: 'iSendResult': unreferenced local variable
+D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(679,10): warning C4101: 'wsaData': unreferenced local variable
+D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(683,6): warning C4101: 'iSendResult': unreferenced local variable
+D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(943,10): warning C4996: 'strcat': This function or variable may be unsafe. Consider using strcat_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(946,10): warning C4996: 'strcat': This function or variable may be unsafe. Consider using strcat_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(949,9): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(950,9): warning C4996: 'strcat': This function or variable may be unsafe. Consider using strcat_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(972,3): warning C4996: 'itoa': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _itoa. See online help for details.
+D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(986,3): warning C4996: 'itoa': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _itoa. See online help for details.
+D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(1002,3): warning C4996: 'itoa': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _itoa. See online help for details.
+D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(1016,3): warning C4996: 'itoa': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _itoa. See online help for details.
+D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(1201,10): warning C4996: 'strcat': This function or variable may be unsafe. Consider using strcat_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(1204,10): warning C4996: 'strcat': This function or variable may be unsafe. Consider using strcat_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(1207,9): warning C4996: 'strcpy': This function or variable may be unsafe. Consider using strcpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(1208,9): warning C4996: 'strcat': This function or variable may be unsafe. Consider using strcat_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(1231,3): warning C4996: 'itoa': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _itoa. See online help for details.
+D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(1245,3): warning C4996: 'itoa': The POSIX name for this item is deprecated. Instead, use the ISO C and C++ conformant name: _itoa. See online help for details.
+D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(1704,8): warning C4101: 'iSendResult': unreferenced local variable
+D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(1931,8): warning C4101: 'iSendResult': unreferenced local variable
+D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(1915): warning C4715: 'clientConnectfn': not all control paths return a value
+D:\Uni projects\Pool Game v3.0@week4\openglbowling\Pool Game.cpp(2169): warning C4715: 'serverConnectfn': not all control paths return a value
   Pool Game.vcxproj -> D:\Uni projects\Pool Game v3.0@week4\openglbowling\Debug\Pool Game.exe

@@ -37,6 +37,7 @@
 #include<glut.h>
 #include<math.h>
 #include"simulation.h"
+#include <mutex>
 
 //#include "threaded_client.h"
 //#include "threaded_server.h"
@@ -49,12 +50,17 @@ namespace info {
 
 	SOCKET ListenSocketo;
 	SOCKET ClientSocketo;
+	std::mutex mtxo;
+}
+namespace info2 {
+	SOCKET ListenSocketi;
+	SOCKET ClientSocketi;
 }
 
 
 
 int Gameturn = 0;
-int maxGameTurn = 4;
+int maxGameTurn = 10;
 bool nonRepeat = false;
 bool gameOver = false;
 bool canhit = true;
@@ -198,7 +204,6 @@ void DoCamera(int ms)
 	}
 }
 
-
 void RenderWelcome(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -255,6 +260,7 @@ void RenderWelcome(void) {
 	glutSwapBuffers();
 
 }
+
 void connectServer() {
 	bool dotheaction = false;
 	while (dotheaction == false) {
@@ -342,9 +348,224 @@ void connectServer() {
 			}
 
 			printf("getting here asdasd");
+			while (true) {
+				printf("listening\n");
+				iResult = recv(info::ClientSocketo, recvbuf, recvbuflen, 0);
+				if (iResult > 0) {
+
+					//info::mtxo.lock();
+					printf("broadcasting\n");
+
+
+					// finding the gCueAngle and gCuePower
+					std::string s = recvbuf;
+					std::string delimiter = ":";
+					size_t pos = 0;
+					std::string pangle;
+					std::string ppower;
+					while ((pos = s.find(delimiter)) != std::string::npos) {
+						pangle = s.substr(0, pos);
+
+						s.erase(0, pos + delimiter.length());
+					}
+					ppower = s;
+					double qangle = ::atof(pangle.c_str());
+					double qpower = ::atof(ppower.c_str());
+					gCueAngle = qangle;
+					gCuePower = qpower;
+					vec2 imp((-sin(gCueAngle) * gCuePower * gCueBallFactor),
+						(-cos(gCueAngle) * gCuePower * gCueBallFactor));
+					std::cout << " --- " << canhitM << "------" << qangle << " --- " << qpower << std::endl;
+					if (strcmp(recvbuf, "0:0") != 0) {
+						std::cout << "server says" << recvbuf << "------" << qangle << " --- " << qpower << " --- " << canhitM << std::endl;
+						if (canhitM == true) {
+							std::cout << "Enter inside" << std::endl;
+							gTable.balls[0].ApplyImpulse(imp);
+							gCueAngle = 0.0;
+							gCuePower = 0.0;
+							gCueAnglePass = 0.0;
+							gCuePowerPass = 0.0;
+							canhitM = false;
+							nonRepeat = true;
+						}
+					}
+
+
+
+
+					//info::mtxo.unlock();
+				}
+				else if (iResult == 0)
+					printf("Connection closing...\n");
+				else {
+					printf("recv failed with error: %d\n", WSAGetLastError());
+					terminate();
+					return;
+				}
+			}
 		}
 	}
 	
+}
+
+void startClient(int argc, char** argv) {
+	bool dotheaction = false;
+	while (dotheaction == false) {
+		if (chooseRoleDone == true && collectionMode == false) {
+			dotheaction = true;
+			std::cout << "xCLIENTx";
+
+			WSADATA wsaData;
+			info2::ClientSocketi = INVALID_SOCKET;
+			struct addrinfo* result = NULL, * ptr = NULL, hints;
+			auto* sendbuf = "this is a test";
+			char recvbuf[DEFAULT_BUFLEN];
+			int iResult;
+			int iSendResult;
+			int recvbuflen = DEFAULT_BUFLEN;
+			// Initialize Winsock
+			iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+			if (iResult != 0) {
+				printf("WSAStartup failed with error: %d\n", iResult);
+				return;
+			}
+
+			ZeroMemory(&hints, sizeof(hints));
+			hints.ai_family = AF_UNSPEC;
+			hints.ai_socktype = SOCK_STREAM;
+			hints.ai_protocol = IPPROTO_TCP;
+
+			// Resolve the server address and port
+			iResult = getaddrinfo(NULL, DEFAULT_PORT, &hints, &result);
+			if (iResult != 0) {
+				printf("getaddrinfo failed with error: %d\n", iResult);
+				WSACleanup();
+				return;
+			}
+
+			// Attempt to connect to an address until one succeeds
+			for (ptr = result; ptr != NULL; ptr = ptr->ai_next) {
+
+				// Create a SOCKET for connecting to server
+				info2::ClientSocketi = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
+				if (info2::ClientSocketi == INVALID_SOCKET) {
+					printf("socket failed with error: %ld\n", WSAGetLastError());
+					WSACleanup();
+					return;
+				}
+
+				// Connect to server.
+				iResult = connect(info2::ClientSocketi, ptr->ai_addr, (int)ptr->ai_addrlen);
+				if (iResult == SOCKET_ERROR) {
+					closesocket(info2::ClientSocketi);
+					info2::ClientSocketi = INVALID_SOCKET;
+					continue;
+				}
+				break;
+			}
+
+			freeaddrinfo(result);
+
+			if (info2::ClientSocketi == INVALID_SOCKET) {
+				printf("Unable to connect to server!\n");
+				WSACleanup();
+				return;
+			}
+			printf("listening\n");
+			while (true) {
+				iResult = recv(info2::ClientSocketi, recvbuf, recvbuflen, 0);
+				if (iResult > 0) {
+
+					// finding the gCueAngle and gCuePower
+					std::string s = recvbuf;
+					std::string delimiter = ":";
+					size_t pos = 0;
+					std::string pangle;
+					std::string ppower;
+					while ((pos = s.find(delimiter)) != std::string::npos) {
+						pangle = s.substr(0, pos);
+
+						s.erase(0, pos + delimiter.length());
+					}
+					ppower = s;
+					double qangle = ::atof(pangle.c_str());
+					double qpower = ::atof(ppower.c_str());
+					gCueAngle = qangle;
+					gCuePower = qpower;
+					vec2 imp((-sin(gCueAngle) * gCuePower * gCueBallFactor),
+						(-cos(gCueAngle) * gCuePower * gCueBallFactor));
+					std::cout << "------" << qangle << " --- " << qpower << std::endl;
+					if (strcmp(recvbuf, "0:0") != 0) {
+						std::cout << "server says" << recvbuf << "------" << qangle << " --- " << qpower << " --- " << canhitM << std::endl;
+						if (canhitM == true) {
+							std::cout << "Enter inside" << std::endl;
+							gTable.balls[0].ApplyImpulse(imp);
+							gCueAngle = 0.0;
+							gCuePower = 0.0;
+							gCueAnglePass = 0.0;
+							gCuePowerPass = 0.0;
+							canhitM = false;
+							nonRepeat = true;
+						}
+
+
+					}
+
+				}
+				else if (iResult == 0)
+					printf("Connection closing...\n");
+				else {
+					printf("recv failed with error: %d\n", WSAGetLastError());
+					terminate();
+					return;
+				}
+			}
+			
+		}
+	}
+}
+
+void sendServerCommand(float gCueAnglePassval, float gCuePowerPassval) {
+
+	
+	auto* sendbuf = "this is a test";
+	char recvbuf[DEFAULT_BUFLEN];
+	int iResult;
+	int iSendResult;
+	int recvbuflen = DEFAULT_BUFLEN;
+	//std::cout << " Client what happened";
+	char msgc[] = "0.0";
+	char powergc[] = "0.0";
+	char pssval[] = "0.0";
+
+	// creating stringstream objects
+	std::stringstream ss1;
+	std::stringstream ss2;
+
+	// assigning the value of num_float to ss1
+	ss1 << gCueAnglePass;
+	ss2 << gCuePowerPass;
+
+	std::string str1 = ss1.str();
+	std::string str2 = ss2.str();
+	std::string p1 = str1;
+	std::string p2 = str2;
+	std::string p3 = p1 + ":" + p2;
+	
+		std::cout << "Client Connected!- sending" << std::endl;
+	
+			std::cout << "SENDING  - IMPLULSEEE" << std::endl;
+			iResult = send(info2::ClientSocketi, p3.c_str(), sizeof(recvbuf), 0);
+			if (iResult == SOCKET_ERROR) {
+				printf("send failed with error: %d\n", WSAGetLastError());
+				closesocket(info2::ClientSocketi);
+				WSACleanup();
+				return;
+			}
+			
+	
+
+
 }
 
 void sendCommand(float gCueAnglePassval,float gCuePowerPassval) {
@@ -386,6 +607,124 @@ void sendCommand(float gCueAnglePassval,float gCuePowerPassval) {
 
 		}
 
+}
+
+void serverinteract() {
+
+	WSADATA wsaData;
+	char recvbuf[DEFAULT_BUFLEN];
+	int recvbuflen = DEFAULT_BUFLEN;
+	int iResult;
+	int iSendResult;
+	while (true) {
+		printf("listening\n");
+		iResult = recv(info::ClientSocketo, recvbuf, recvbuflen, 0);
+		if (iResult > 0) {
+
+			info::mtxo.lock();
+			printf("broadcasting\n");
+
+
+			// finding the gCueAngle and gCuePower
+			std::string s = recvbuf;
+			std::string delimiter = ":";
+			size_t pos = 0;
+			std::string pangle;
+			std::string ppower;
+			while ((pos = s.find(delimiter)) != std::string::npos) {
+				pangle = s.substr(0, pos);
+
+				s.erase(0, pos + delimiter.length());
+			}
+			ppower = s;
+			double qangle = ::atof(pangle.c_str());
+			double qpower = ::atof(ppower.c_str());
+			gCueAngle = qangle;
+			gCuePower = qpower;
+			vec2 imp((-sin(gCueAngle) * gCuePower * gCueBallFactor),
+				(-cos(gCueAngle) * gCuePower * gCueBallFactor));
+			std::cout << " --- " << canhitM << "------" << qangle << " --- " << qpower << std::endl;
+			if (strcmp(recvbuf, "0:0") != 0) {
+				std::cout << "server says" << recvbuf << "------" << qangle << " --- " << qpower << " --- " << canhitM << std::endl;
+				if (canhitM == true) {
+					std::cout << "Enter inside" << std::endl;
+					gTable.balls[0].ApplyImpulse(imp);
+					gCueAngle = 0.0;
+					gCuePower = 0.0;
+					gCueAnglePass = 0.0;
+					gCuePowerPass = 0.0;
+					canhitM = false;
+					nonRepeat = true;
+				}
+			}
+		
+
+
+
+			info::mtxo.unlock();
+		}
+		else if (iResult == 0)
+			printf("Connection closing...\n");
+		else {
+			printf("recv failed with error: %d\n", WSAGetLastError());
+			terminate();
+			return;
+		}
+	}
+}
+
+
+void Clientinteract() {
+
+	WSADATA wsaData;
+	char recvbuf[DEFAULT_BUFLEN];
+	int recvbuflen = DEFAULT_BUFLEN;
+	int iResult;
+	int iSendResult;
+
+	while (true) {
+		printf("listening\n");
+		iResult = recv(info2::ClientSocketi, recvbuf, recvbuflen, 0);
+		if (iResult > 0) {
+
+			// finding the gCueAngle and gCuePower
+			std::string s = recvbuf;
+			std::string delimiter = ":";
+			size_t pos = 0;
+			std::string pangle;
+			std::string ppower;
+			while ((pos = s.find(delimiter)) != std::string::npos) {
+				pangle = s.substr(0, pos);
+
+				s.erase(0, pos + delimiter.length());
+			}
+			ppower = s;
+			double qangle = ::atof(pangle.c_str());
+			double qpower = ::atof(ppower.c_str());
+			gCueAngle = qangle;
+			gCuePower = qpower;
+			vec2 imp((-sin(gCueAngle) * gCuePower * gCueBallFactor),
+				(-cos(gCueAngle) * gCuePower * gCueBallFactor));
+			std::cout << " --- " << canhitM << "------" << qangle << " --- " << qpower << std::endl;
+			if (strcmp(recvbuf, "0:0") != 0) {
+				std::cout << "server says" << recvbuf << "------" << qangle << " --- " << qpower << " --- " << canhitM << std::endl;
+				if (canhitM == true) {
+					std::cout << "Enter inside" << std::endl;
+					gTable.balls[0].ApplyImpulse(imp);
+					gCueAngle = 0.0;
+					gCuePower = 0.0;
+					gCueAnglePass = 0.0;
+					gCuePowerPass = 0.0;
+					canhitM = false;
+					nonRepeat = true;
+				}
+			
+
+			}
+
+		}
+		
+	}
 }
 void RenderScene(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -1158,6 +1497,16 @@ void KeyboardFunc(unsigned char key, int x, int y)
 		{
 			if(gDoCue)
 			{
+				int turn = 0;
+				if (Gameturn % NUM_PLAYERS == 0) {
+					printf("only server can play");
+					turn = 0;
+				}
+				else {
+					printf("only client can play");
+					turn = 1;
+				}
+				std::cout << Gameturn;
 				if (playOffline == true) {
 					vec2 imp((-sin(gCueAngle) * gCuePower * gCueBallFactor),
 						(-cos(gCueAngle) * gCuePower * gCueBallFactor));
@@ -1168,7 +1517,7 @@ void KeyboardFunc(unsigned char key, int x, int y)
 					}
 				}
 				else {
-					if (Gameturn % NUM_PLAYERS == identity) {
+					if (identity==0 && turn ==0) {
 						vec2 imp((-sin(gCueAngle) * gCuePower * gCueBallFactor),
 							(-cos(gCueAngle) * gCuePower * gCueBallFactor));
 						if (gameOver == false && canhit == true) {
@@ -1179,28 +1528,24 @@ void KeyboardFunc(unsigned char key, int x, int y)
 							canhitM = true;
 							nonRepeat = true;
 							sendMessage = true;
+							printf("Sending from sevrer");
 							sendCommand(gCueAnglePass, gCuePowerPass);
 						}
-						/*while (gTable.AnyBallsMoving() == true) {
-							//asd
-							std::cout << "ASD";
+					}
+					else if(identity == 1 && turn == 1){
+						vec2 imp((-sin(gCueAngle) * gCuePower * gCueBallFactor),
+							(-cos(gCueAngle) * gCuePower * gCueBallFactor));
+						if (gameOver == false && canhit == true) {
+							gTable.balls[0].ApplyImpulse(imp);
+							gCueAnglePass = gCueAngle;
+							gCuePowerPass = gCuePower;
+							canhit = false;
+							canhitM = true;
+							nonRepeat = true;
+							sendMessage = true;
+							printf("Sending from client");
+							sendServerCommand(gCueAnglePass, gCuePowerPass);
 						}
-						if (gameOver == false) {
-							if (gTable.AnyBallsMoving() == false) {
-								nonRepeat = true;
-								Gameturn++;
-								canhit = true;
-								canhitM = true;
-								gCueAnglePass = 0.0;
-								gCuePowerPass = 0.0;
-								//gCueAngle = 0.0;
-								//gCuePower = 0.0;
-								for (int i = 0; i < NUM_BALLS; i++)
-								{
-									gTable.balls[i].Reset();
-								}
-							}
-						}*/
 					}
 				}
 			
@@ -1883,10 +2228,16 @@ int _tmain(int argc, char *argv[])
 
 	//td::thread t1(serverConnectfn);
 	std::thread t1(connectServer);
-	std::thread t2(clientConnectfn,argc, argv);
+	std::thread t2(startClient, argc, argv);
+
+	//std::thread t3(serverinteract);
+	//std::thread t4(Clientinteract);
 
 	t1.detach();
 	t2.detach();
+
+	//t3.detach();
+	//t4.detach();
 
 	
 
