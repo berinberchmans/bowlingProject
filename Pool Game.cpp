@@ -408,10 +408,10 @@ void connectServer() {
 	
 }
 
-void startClient(int argc, char** argv) {
+void startClient(const char* ipaddress, const char* port) {
 	bool dotheaction = false;
 	while (dotheaction == false) {
-		if (chooseRoleDone == true && collectionMode == false) {
+		if (chosenMode == true) {
 			dotheaction = true;
 			std::cout << "xCLIENTx";
 
@@ -436,7 +436,8 @@ void startClient(int argc, char** argv) {
 			hints.ai_protocol = IPPROTO_TCP;
 
 			// Resolve the server address and port
-			iResult = getaddrinfo(NULL, DEFAULT_PORT, &hints, &result);
+			std::cout << ipaddress << "  ----  " << port;
+			iResult = getaddrinfo(ipaddress, port, &hints, &result);
 			if (iResult != 0) {
 				printf("getaddrinfo failed with error: %d\n", iResult);
 				WSACleanup();
@@ -470,6 +471,10 @@ void startClient(int argc, char** argv) {
 				printf("Unable to connect to server!\n");
 				WSACleanup();
 				return;
+			}
+			else {
+				printf("Connected to seerverrr");
+				chooseRoleDone = true;
 			}
 			printf("listening\n");
 			while (true) {
@@ -746,16 +751,17 @@ void RenderScene(void) {
 			glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, da[i]);
 		}
 
-		char  c01[] = "Press Enter to choose an option";
-		glRasterPos2f(-0.3f, 0.51f);
-		glColor3f(1., 0., 0.);
-		int lenca = strlen(c01);
-		for (int i = 0; i < lenca; i++) {
-			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c01[i]);
-		}
+		
 		
 
 		if (chosenMode == false) {
+			char  c01[] = "Press Enter to choose an option";
+			glRasterPos2f(-0.3f, 0.51f);
+			glColor3f(1., 0., 0.);
+			int lenca = strlen(c01);
+			for (int i = 0; i < lenca; i++) {
+				glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c01[i]);
+			}
 
 			char  c02[] = "Play offline";
 			char  c03[] = "Play Multiplayer LAN";
@@ -800,7 +806,7 @@ void RenderScene(void) {
 
 				}
 				else {
-					char  c02[] = "Host";
+					char  c02[] = "Connecting....";
 					char  c03[] = "Join";
 					char  c04[] = "->";
 
@@ -810,26 +816,15 @@ void RenderScene(void) {
 					for (int i = 0; i < lencb; i++) {
 						glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c02[i]);
 					}
-					glRasterPos2f(-0.3f, 0.31f);
-					glColor3f(1., 0., 0.);
-					int lencc = strlen(c03);
-					for (int i = 0; i < lencc; i++) {
-						glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c03[i]);
-					}
+
+
 					if (collectionMode == true) {
-						identity = 0;
-						glRasterPos2f(-0.38f, 0.41f);
+						identity = 1;
 					}
 					else {
 						identity = 1;
-						glRasterPos2f(-0.38f, 0.31f);
 					}
-					//glRasterPos2f(-0.38f, 0.31f);
-					glColor3f(1., 0., 0.);
-					int lensel = strlen(c04);
-					for (int i = 0; i < lensel; i++) {
-						glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c04[i]);
-					}
+					
 				}
 				
 
@@ -1486,10 +1481,9 @@ void KeyboardFunc(unsigned char key, int x, int y)
 	
 		if (chosenMode == false) {
 			chosenMode = true;
+			
 		}
-		else {
-			chooseRoleDone = true;
-		}		
+		
 		break;
 
 	}
@@ -1517,7 +1511,7 @@ void KeyboardFunc(unsigned char key, int x, int y)
 					}
 				}
 				else {
-					if (identity==0 && turn ==0) {
+					if (identity==0 ) {
 						vec2 imp((-sin(gCueAngle) * gCuePower * gCueBallFactor),
 							(-cos(gCueAngle) * gCuePower * gCueBallFactor));
 						if (gameOver == false && canhit == true) {
@@ -1532,7 +1526,7 @@ void KeyboardFunc(unsigned char key, int x, int y)
 							sendCommand(gCueAnglePass, gCuePowerPass);
 						}
 					}
-					else if(identity == 1 && turn == 1){
+					else if(identity == 1){
 						vec2 imp((-sin(gCueAngle) * gCuePower * gCueBallFactor),
 							(-cos(gCueAngle) * gCuePower * gCueBallFactor));
 						if (gameOver == false && canhit == true) {
@@ -2215,7 +2209,7 @@ void UpdateScene(int ms)
 	glutPostRedisplay();
 }
 
-int _tmain(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
 	
 	gTable.SetupCushions();
@@ -2228,7 +2222,7 @@ int _tmain(int argc, char *argv[])
 
 	//td::thread t1(serverConnectfn);
 	std::thread t1(connectServer);
-	std::thread t2(startClient, argc, argv);
+	std::thread t2(startClient, argv[1], argv[2]);
 
 	//std::thread t3(serverinteract);
 	//std::thread t4(Clientinteract);
