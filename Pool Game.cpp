@@ -81,6 +81,8 @@ bool canhitM = true;
 
 bool sendMessage = false;
 
+bool playerConnected = false;
+
 
 
 
@@ -489,32 +491,41 @@ void startClient(const char* ipaddress, const char* port) {
 					std::string ppower;
 					while ((pos = s.find(delimiter)) != std::string::npos) {
 						pangle = s.substr(0, pos);
-
 						s.erase(0, pos + delimiter.length());
 					}
 					ppower = s;
-					double qangle = ::atof(pangle.c_str());
-					double qpower = ::atof(ppower.c_str());
-					gCueAngle = qangle;
-					gCuePower = qpower;
-					vec2 imp((-sin(gCueAngle) * gCuePower * gCueBallFactor),
-						(-cos(gCueAngle) * gCuePower * gCueBallFactor));
-					std::cout << "------" << qangle << " --- " << qpower << std::endl;
-					if (strcmp(recvbuf, "0:0") != 0) {
-						std::cout << "server says" << recvbuf << "------" << qangle << " --- " << qpower << " --- " << canhitM << std::endl;
-						if (canhitM == true) {
-							std::cout << "Enter inside" << std::endl;
-							gTable.balls[0].ApplyImpulse(imp);
-							gCueAngle = 0.0;
-							gCuePower = 0.0;
-							gCueAnglePass = 0.0;
-							gCuePowerPass = 0.0;
-							canhitM = false;
-							nonRepeat = true;
-						}
-
-
+					std::cout<<"the identityi!!" << recvbuf;
+					if (strcmp(pangle.c_str(), "id") == 0) {
+					
+						int num = std::stoi(ppower.c_str());
+						identity = num%2;
+						std::cout<<"----------------------" << identity;
+						chooseRoleDone = true;
+						playerConnected = true;
 					}
+					else {
+						double qangle = ::atof(pangle.c_str());
+						double qpower = ::atof(ppower.c_str());
+						gCueAngle = qangle;
+						gCuePower = qpower;
+						vec2 imp((-sin(gCueAngle) * gCuePower * gCueBallFactor),
+							(-cos(gCueAngle) * gCuePower * gCueBallFactor));
+						std::cout << "------" << qangle << " --- " << qpower << std::endl;
+						if (strcmp(recvbuf, "0:0") != 0) {
+							std::cout << "server says" << recvbuf << "------" << qangle << " --- " << qpower << " --- " << canhitM << std::endl;
+							if (canhitM == true) {
+								std::cout << "Enter inside" << std::endl;
+								gTable.balls[0].ApplyImpulse(imp);
+								gCueAngle = 0.0;
+								gCuePower = 0.0;
+								gCueAnglePass = 0.0;
+								gCuePowerPass = 0.0;
+								canhitM = false;
+								nonRepeat = true;
+							}
+						}
+					}
+					
 
 				}
 				else if (iResult == 0)
@@ -530,6 +541,33 @@ void startClient(const char* ipaddress, const char* port) {
 	}
 }
 
+void sendServerMessage() {
+
+
+	auto* sendbuf = "identity";
+	char recvbuf[DEFAULT_BUFLEN];
+	int iResult;
+	int iSendResult;
+	int recvbuflen = DEFAULT_BUFLEN;
+
+
+
+	std::cout << "Asking identity" << std::endl;
+	iResult = send(info2::ClientSocketi, sendbuf, 8, 0);
+	if (iResult == SOCKET_ERROR) {
+		printf("send failed with error: %d\n", WSAGetLastError());
+		closesocket(info2::ClientSocketi);
+		WSACleanup();
+		return;
+	}
+	else {
+		chooseRoleDone = false;
+	}
+
+
+
+
+}
 void sendServerCommand(float gCueAnglePassval, float gCuePowerPassval) {
 
 	
@@ -801,8 +839,22 @@ void RenderScene(void) {
 			}
 			else {
 				if (chooseRoleDone == true) {
-					welcomeOn = false;
-					startgame = true;
+					
+					if (playerConnected == true) {
+						welcomeOn = false;
+						startgame = true;
+					}
+					else {
+						char  c03[] = "Connected! Press P to join a game";
+						glRasterPos2f(-0.3f, 0.41f);
+						glColor3f(1., 0., 0.);
+						int lencb = strlen(c03);
+						for (int i = 0; i < lencb; i++) {
+							glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c03[i]);
+						}
+					}
+
+				
 
 				}
 				else {
@@ -1492,12 +1544,12 @@ void KeyboardFunc(unsigned char key, int x, int y)
 			if(gDoCue)
 			{
 				int turn = 0;
-				if (Gameturn % NUM_PLAYERS == 0) {
-					printf("only server can play");
+				if (Gameturn % 2 == identity) {
+					printf("only you can play");
 					turn = 0;
 				}
 				else {
-					printf("only client can play");
+					printf("only opponent can play");
 					turn = 1;
 				}
 				std::cout << Gameturn;
@@ -1511,7 +1563,7 @@ void KeyboardFunc(unsigned char key, int x, int y)
 					}
 				}
 				else {
-					if (identity==0 ) {
+					/*if (identity == 0) {
 						vec2 imp((-sin(gCueAngle) * gCuePower * gCueBallFactor),
 							(-cos(gCueAngle) * gCuePower * gCueBallFactor));
 						if (gameOver == false && canhit == true) {
@@ -1525,8 +1577,8 @@ void KeyboardFunc(unsigned char key, int x, int y)
 							printf("Sending from sevrer");
 							sendCommand(gCueAnglePass, gCuePowerPass);
 						}
-					}
-					else if(identity == 1){
+					}*/
+					 if(Gameturn%2 == identity){
 						vec2 imp((-sin(gCueAngle) * gCuePower * gCueBallFactor),
 							(-cos(gCueAngle) * gCuePower * gCueBallFactor));
 						if (gameOver == false && canhit == true) {
@@ -1540,7 +1592,9 @@ void KeyboardFunc(unsigned char key, int x, int y)
 							printf("Sending from client");
 							sendServerCommand(gCueAnglePass, gCuePowerPass);
 						}
-					}
+					 }
+					 else {
+					 }
 				}
 			
 				//gCueAnglePass = 0.0;
@@ -1593,6 +1647,11 @@ void KeyboardFunc(unsigned char key, int x, int y)
 			gCamZout = true;
 			break;
 		}
+	case('p'):
+	{
+		sendServerMessage();
+		break;
+	}
 	case('q'):
 		{
 		//welcomeOn = false;
