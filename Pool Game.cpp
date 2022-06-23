@@ -60,7 +60,7 @@ namespace info2 {
 
 
 int Gameturn = 0;
-int maxGameTurn = 10;
+int maxGameTurn = 4;
 bool nonRepeat = false;
 bool gameOver = false;
 bool canhit = true;
@@ -206,213 +206,14 @@ void DoCamera(int ms)
 	}
 }
 
-void RenderWelcome(void) {
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	//set camera
-	glLoadIdentity();
-	gluLookAt(gCamPos(0), gCamPos(1), gCamPos(2), gCamLookAt(0), gCamLookAt(1), gCamLookAt(2), 0.0f, 1.0f, 0.0f);
-	//draw the ball
-	glColor3f(0.3, 0.3, 0.3);
-	glColor3f(1.0, 1.0, 1.0);
-	//draw text
-	char  da[] = "Welcome to the pool game";
-	glRasterPos2f(-0.3f, 0.71f);
-	glColor3f(1., 0., 0.);
-	int len = strlen(da);
-	for (int i = 0; i < len; i++) {
-		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, da[i]);
-	}
-
-	char  c01[] = "Press Enter to choose an option";
-	char  c02[] = "Play offline";
-	char  c03[] = "Play Multiplayer LAN";
-	char  c04[] = "->";
-	glRasterPos2f(-0.3f, 0.51f);
-	glColor3f(1., 0., 0.);
-	int lenca = strlen(c01);
-	for (int i = 0; i < lenca; i++) {
-		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c01[i]);
-	}
-	glRasterPos2f(-0.3f, 0.41f);
-	glColor3f(1., 0., 0.);
-	int lencb = strlen(c02);
-	for (int i = 0; i < lencb; i++) {
-		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c02[i]);
-	}
-	glRasterPos2f(-0.3f, 0.31f);
-	glColor3f(1., 0., 0.);
-	int lencc = strlen(c03);
-	for (int i = 0; i < lencc; i++) {
-		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c03[i]);
-	}
-	if (playOffline == true) {
-		glRasterPos2f(-0.38f, 0.41f);
-	}
-	else {
-		glRasterPos2f(-0.38f, 0.31f);
-	}
-	glColor3f(1., 0., 0.);
-	int lensel = strlen(c04);
-	for (int i = 0; i < lensel; i++) {
-		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c04[i]);
-	}
-
-	glFlush();
-	glutSwapBuffers();
-
-}
-
-void connectServer() {
-	bool dotheaction = false;
-	while (dotheaction == false) {
-		if (chooseRoleDone == true && collectionMode == true) {
-			dotheaction = true;
-
-			WSADATA wsaData;
-			int iResult;
-
-			info::ListenSocketo = INVALID_SOCKET;
-			info::ClientSocketo = INVALID_SOCKET;
-
-			struct addrinfo* result = NULL;
-			struct addrinfo hints;
-
-			int iSendResult;
-			char recvbuf[DEFAULT_BUFLEN];
-			int recvbuflen = DEFAULT_BUFLEN;
-
-			// Initialize Winsock
-			iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
-			if (iResult != 0) {
-				printf("WSAStartup failed with error: %d\n", iResult);
-				return;
-			}
-
-
-			ZeroMemory(&hints, sizeof(hints));
-			hints.ai_family = AF_INET;
-			hints.ai_socktype = SOCK_STREAM;
-			hints.ai_protocol = IPPROTO_TCP;
-			hints.ai_flags = AI_PASSIVE;
-
-			// Resolve the server address and port
-			iResult = getaddrinfo(NULL, DEFAULT_PORT, &hints, &result);
-			if (iResult != 0) {
-				printf("getaddrinfo failed with error: %d\n", iResult);
-
-				WSACleanup();
-				return;
-			}
-
-
-
-			// Create a SOCKET for connecting to server
-			info::ListenSocketo = socket(result->ai_family, result->ai_socktype, result->ai_protocol);
-			if (info::ListenSocketo == INVALID_SOCKET) {
-				printf("socket failed with error: %ld\n", WSAGetLastError());
-				freeaddrinfo(result);
-				WSACleanup();
-				return;
-			}
-
-			// Setup the TCP listening socket
-			iResult = bind(info::ListenSocketo, result->ai_addr, (int)result->ai_addrlen);
-			if (iResult == SOCKET_ERROR) {
-				printf("bind failed with error: %d\n", WSAGetLastError());
-				freeaddrinfo(result);
-				closesocket(info::ListenSocketo);
-				WSACleanup();
-				return;
-			}
-
-
-
-			freeaddrinfo(result);
-
-			iResult = listen(info::ListenSocketo, SOMAXCONN);
-			if (iResult == SOCKET_ERROR) {
-				printf("listen failed with error: %d\n", WSAGetLastError());
-				closesocket(info::ListenSocketo);
-				WSACleanup();
-				return;
-			}
-
-
-
-			// Accept a client socket
-			info::ClientSocketo = accept(info::ListenSocketo, NULL, NULL);
-			if (info::ClientSocketo == INVALID_SOCKET) {
-				printf("accept failed with error: %d\n", WSAGetLastError());
-				closesocket(info::ListenSocketo);
-				WSACleanup();
-				return;
-			}
-
-			printf("getting here asdasd");
-			while (true) {
-				printf("listening\n");
-				iResult = recv(info::ClientSocketo, recvbuf, recvbuflen, 0);
-				if (iResult > 0) {
-
-					//info::mtxo.lock();
-					printf("broadcasting\n");
-
-
-					// finding the gCueAngle and gCuePower
-					std::string s = recvbuf;
-					std::string delimiter = ":";
-					size_t pos = 0;
-					std::string pangle;
-					std::string ppower;
-					while ((pos = s.find(delimiter)) != std::string::npos) {
-						pangle = s.substr(0, pos);
-
-						s.erase(0, pos + delimiter.length());
-					}
-					ppower = s;
-					double qangle = ::atof(pangle.c_str());
-					double qpower = ::atof(ppower.c_str());
-					gCueAngle = qangle;
-					gCuePower = qpower;
-					vec2 imp((-sin(gCueAngle) * gCuePower * gCueBallFactor),
-						(-cos(gCueAngle) * gCuePower * gCueBallFactor));
-					std::cout << " --- " << canhitM << "------" << qangle << " --- " << qpower << std::endl;
-					if (strcmp(recvbuf, "0:0") != 0) {
-						std::cout << "server says" << recvbuf << "------" << qangle << " --- " << qpower << " --- " << canhitM << std::endl;
-						if (canhitM == true) {
-							std::cout << "Enter inside" << std::endl;
-							gTable.balls[0].ApplyImpulse(imp);
-							gCueAngle = 0.0;
-							gCuePower = 0.0;
-							gCueAnglePass = 0.0;
-							gCuePowerPass = 0.0;
-							canhitM = false;
-							nonRepeat = true;
-						}
-					}
-
-
-
-
-					//info::mtxo.unlock();
-				}
-				else if (iResult == 0)
-					printf("Connection closing...\n");
-				else {
-					printf("recv failed with error: %d\n", WSAGetLastError());
-					terminate();
-					return;
-				}
-			}
-		}
-	}
-	
-}
 
 void startClient(const char* ipaddress, const char* port) {
 	bool dotheaction = false;
+	
 	while (dotheaction == false) {
+		if (playOffline == true) {
+			continue;
+		}
 		if (chosenMode == true) {
 			dotheaction = true;
 			std::cout << "xCLIENTx";
@@ -494,7 +295,7 @@ void startClient(const char* ipaddress, const char* port) {
 						s.erase(0, pos + delimiter.length());
 					}
 					ppower = s;
-					std::cout<<"the identityi!!" << recvbuf;
+					
 					if (strcmp(pangle.c_str(), "id") == 0) {
 					
 						int num = std::stoi(ppower.c_str());
@@ -568,7 +369,7 @@ void sendServerMessage() {
 
 
 }
-void sendServerCommand(float gCueAnglePassval, float gCuePowerPassval) {
+void sendServerCommand(float *gCueAnglePassval, float *gCuePowerPassval) {
 
 	
 	auto* sendbuf = "this is a test";
@@ -611,164 +412,11 @@ void sendServerCommand(float gCueAnglePassval, float gCuePowerPassval) {
 
 }
 
-void sendCommand(float gCueAnglePassval,float gCuePowerPassval) {
-	char recvbuf[DEFAULT_BUFLEN];
-	int recvbuflen = DEFAULT_BUFLEN;
-	int iResult;
-	char msgc[] = "0.0";
-	char powergc[] = "0.0";
-	char pssval[] = "0.0";
-
-
-	// creating stringstream objects
-	std::stringstream ss1;
-	std::stringstream ss2;
-
-	// assigning the value of num_float to ss1
-	ss1 << gCueAnglePassval;
-
-	// assigning the value of num_float to ss2
-	ss2 << gCuePowerPassval;
-
-	// initializing two string variables with the values of ss1 and ss2
-	// and converting it to string format with str() function
-	std::string str1 = ss1.str();
-	std::string str2 = ss2.str();
-
-	//itoa(gCueAnglePass, msgc, 10);
-	//itoa(gCuePowerPass, powergc, 10);
-	std::string p1 = str1;
-	std::string p2 = str2;
-	std::string p3 = p1 + ":" + p2;
-	std::cout << "Server Connected!- sending" << std::endl;
-			iResult = send(info::ClientSocketo, p3.c_str(), sizeof(recvbuf), 0);
-			if (iResult == SOCKET_ERROR) {
-				printf("send failed with error: %d\n", WSAGetLastError());
-				closesocket(info::ClientSocketo);
-				WSACleanup();
-				return;
-
-		}
-
-}
-
-void serverinteract() {
-
-	WSADATA wsaData;
-	char recvbuf[DEFAULT_BUFLEN];
-	int recvbuflen = DEFAULT_BUFLEN;
-	int iResult;
-	int iSendResult;
-	while (true) {
-		printf("listening\n");
-		iResult = recv(info::ClientSocketo, recvbuf, recvbuflen, 0);
-		if (iResult > 0) {
-
-			info::mtxo.lock();
-			printf("broadcasting\n");
-
-
-			// finding the gCueAngle and gCuePower
-			std::string s = recvbuf;
-			std::string delimiter = ":";
-			size_t pos = 0;
-			std::string pangle;
-			std::string ppower;
-			while ((pos = s.find(delimiter)) != std::string::npos) {
-				pangle = s.substr(0, pos);
-
-				s.erase(0, pos + delimiter.length());
-			}
-			ppower = s;
-			double qangle = ::atof(pangle.c_str());
-			double qpower = ::atof(ppower.c_str());
-			gCueAngle = qangle;
-			gCuePower = qpower;
-			vec2 imp((-sin(gCueAngle) * gCuePower * gCueBallFactor),
-				(-cos(gCueAngle) * gCuePower * gCueBallFactor));
-			std::cout << " --- " << canhitM << "------" << qangle << " --- " << qpower << std::endl;
-			if (strcmp(recvbuf, "0:0") != 0) {
-				std::cout << "server says" << recvbuf << "------" << qangle << " --- " << qpower << " --- " << canhitM << std::endl;
-				if (canhitM == true) {
-					std::cout << "Enter inside" << std::endl;
-					gTable.balls[0].ApplyImpulse(imp);
-					gCueAngle = 0.0;
-					gCuePower = 0.0;
-					gCueAnglePass = 0.0;
-					gCuePowerPass = 0.0;
-					canhitM = false;
-					nonRepeat = true;
-				}
-			}
-		
 
 
 
-			info::mtxo.unlock();
-		}
-		else if (iResult == 0)
-			printf("Connection closing...\n");
-		else {
-			printf("recv failed with error: %d\n", WSAGetLastError());
-			terminate();
-			return;
-		}
-	}
-}
 
 
-void Clientinteract() {
-
-	WSADATA wsaData;
-	char recvbuf[DEFAULT_BUFLEN];
-	int recvbuflen = DEFAULT_BUFLEN;
-	int iResult;
-	int iSendResult;
-
-	while (true) {
-		printf("listening\n");
-		iResult = recv(info2::ClientSocketi, recvbuf, recvbuflen, 0);
-		if (iResult > 0) {
-
-			// finding the gCueAngle and gCuePower
-			std::string s = recvbuf;
-			std::string delimiter = ":";
-			size_t pos = 0;
-			std::string pangle;
-			std::string ppower;
-			while ((pos = s.find(delimiter)) != std::string::npos) {
-				pangle = s.substr(0, pos);
-
-				s.erase(0, pos + delimiter.length());
-			}
-			ppower = s;
-			double qangle = ::atof(pangle.c_str());
-			double qpower = ::atof(ppower.c_str());
-			gCueAngle = qangle;
-			gCuePower = qpower;
-			vec2 imp((-sin(gCueAngle) * gCuePower * gCueBallFactor),
-				(-cos(gCueAngle) * gCuePower * gCueBallFactor));
-			std::cout << " --- " << canhitM << "------" << qangle << " --- " << qpower << std::endl;
-			if (strcmp(recvbuf, "0:0") != 0) {
-				std::cout << "server says" << recvbuf << "------" << qangle << " --- " << qpower << " --- " << canhitM << std::endl;
-				if (canhitM == true) {
-					std::cout << "Enter inside" << std::endl;
-					gTable.balls[0].ApplyImpulse(imp);
-					gCueAngle = 0.0;
-					gCuePower = 0.0;
-					gCueAnglePass = 0.0;
-					gCuePowerPass = 0.0;
-					canhitM = false;
-					nonRepeat = true;
-				}
-			
-
-			}
-
-		}
-		
-	}
-}
 void RenderScene(void) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -781,7 +429,7 @@ void RenderScene(void) {
 	if (welcomeOn == true) {
 		glColor3f(1.0, 1.0, 1.0);
 		//draw text
-		char  da[] = "Welcome to the pool game";
+		char  da[] = "Welcome to 10 Pin Bowling Game!";
 		glRasterPos2f(-0.3f, 0.71f);
 		glColor3f(1., 0., 0.);
 		int len = strlen(da);
@@ -869,13 +517,6 @@ void RenderScene(void) {
 						glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, c02[i]);
 					}
 
-
-					if (collectionMode == true) {
-						identity = 1;
-					}
-					else {
-						identity = 1;
-					}
 					
 				}
 				
@@ -966,7 +607,7 @@ void RenderScene(void) {
 		}
 		if (gg == 10) {
 			char  strikechar[] = "Strike!";
-			glRasterPos2f(0.1f, 0.71f);
+			glRasterPos2f(0.1f, 0.61f);
 			glColor3f(1., 0., 0.);
 			int lenx = strlen(strikechar);
 			for (int i = 0; i < lenx; i++) {
@@ -976,6 +617,7 @@ void RenderScene(void) {
 		}
 		if (Gameturn >= maxGameTurn) {
 			char  strikechariX[] = "Game Over!";
+			char  drawmatch[] = "It's a Draw!";
 			gameOver = true;
 			glRasterPos2f(0.0f, 0.61f);
 			glColor3f(1., 0., 0.);
@@ -985,9 +627,13 @@ void RenderScene(void) {
 			}
 			char  whowon[2] = "";
 			char  resultx[] = " Wins!";
+			int itsdraw = 0;
 			if (gTable.players[0].score > gTable.players[1].score) {
 
 				std::strcat(whowon, "1");
+			}
+			else if (gTable.players[0].score == gTable.players[1].score) {
+				itsdraw = 1;
 			}
 			else {
 				std::strcat(whowon, "2");
@@ -1002,13 +648,40 @@ void RenderScene(void) {
 			for (int j = 0; j < len22; j++) {
 				glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, newArray[j]);
 			}
-			for (int k = 0; k < len12; k++) {
-				glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, resultx[k]);
+			if (itsdraw == 0) {
+				for (int k = 0; k < len12; k++) {
+					glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, resultx[k]);
+				}
 			}
+			else {
+				for (int k = 0; k < strlen(drawmatch); k++) {
+					glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, drawmatch[k]);
+				}
+			}
+			
 		}
 
 		if (gTable.AnyBallsMoving() == false && nonRepeat == true) {
 			gTable.players[Gameturn % NUM_PLAYERS].score = gTable.players[Gameturn % NUM_PLAYERS].score + gg;
+			if (gameOver == false) {
+				
+				if (gTable.AnyBallsMoving() == false) {
+					using namespace std::this_thread; 
+					using namespace std::chrono; 
+					sleep_for(seconds(1));
+					nonRepeat = true;
+					Gameturn++;
+					canhit = true;
+					gCueAnglePass = 0.0;
+					gCuePowerPass = 0.0;
+					gCueAngle = 0.0;
+					gCuePower = 0.0;
+					for (int i = 0; i < NUM_BALLS; i++)
+					{
+						gTable.balls[i].Reset();
+					}
+				}
+			}
 			nonRepeat = false;
 			//std::cout <<" Soldier Boy " << gTable.players[Gameturn % NUM_PLAYERS].score;
 		}
@@ -1078,246 +751,17 @@ void RenderScene(void) {
 		for (int i = 0; i < NUM_CUSHIONS; i++)
 		{
 
-			glBegin(GL_LINE_LOOP);
+			glBegin(GL_POLYGON);
 			glVertex3f(gTable.cushions[i].vertices[0](0), 0.0, gTable.cushions[i].vertices[0](1));
 			glVertex3f(gTable.cushions[i].vertices[0](0), 0.1, gTable.cushions[i].vertices[0](1));
 			glVertex3f(gTable.cushions[i].vertices[1](0), 0.1, gTable.cushions[i].vertices[1](1));
 			glVertex3f(gTable.cushions[i].vertices[1](0), 0.0, gTable.cushions[i].vertices[1](1));
 			glEnd();
 		}
-		for (int i = 0; i < NUM_CUSHIONS; i++)
+		for (int i = 0; i < NUM_CUSHIONS_lane; i++)
 		{
 
-			glBegin(GL_LINE_LOOP);
-			glVertex3f(gLane.cushions[i].vertices[0](0), 0.0, gLane.cushions[i].vertices[0](1));
-			glVertex3f(gLane.cushions[i].vertices[0](0), 0.1, gLane.cushions[i].vertices[0](1));
-			glVertex3f(gLane.cushions[i].vertices[1](0), 0.1, gLane.cushions[i].vertices[1](1));
-			glVertex3f(gLane.cushions[i].vertices[1](0), 0.0, gLane.cushions[i].vertices[1](1));
-			glEnd();
-		}
-
-		for (int i = 0; i < gTable.parts.num; i++)
-		{
-			glColor3f(1.0, 0.0, 0.0);
-			glPushMatrix();
-			glTranslatef(gTable.parts.particles[i]->position(0), gTable.parts.particles[i]->position(1), gTable.parts.particles[i]->position(2));
-#if DRAW_SOLID
-			glutSolidSphere(0.002f, 32, 32);
-#else
-			glutWireSphere(0.002f, 12, 12);
-#endif
-			glPopMatrix();
-		}
-		/*
-		glBegin(GL_LINE_LOOP);
-		glVertex3f (TABLE_X, 0.0, -TABLE_Z);
-		glVertex3f (TABLE_X, 0.1, -TABLE_Z);
-		glVertex3f (TABLE_X, 0.1, TABLE_Z);
-		glVertex3f (TABLE_X, 0.0, TABLE_Z);
-		glEnd();
-		glBegin(GL_LINE_LOOP);
-		glVertex3f (TABLE_X, 0.0, -TABLE_Z);
-		glVertex3f (TABLE_X, 0.1, -TABLE_Z);
-		glVertex3f (-TABLE_X, 0.1, -TABLE_Z);
-		glVertex3f (-TABLE_X, 0.0, -TABLE_Z);
-		glEnd();
-		glBegin(GL_LINE_LOOP);
-		glVertex3f (TABLE_X, 0.0, TABLE_Z);
-		glVertex3f (TABLE_X, 0.1, TABLE_Z);
-		glVertex3f (-TABLE_X, 0.1, TABLE_Z);
-		glVertex3f (-TABLE_X, 0.0, TABLE_Z);
-		glEnd();
-		*/
-
-		//draw the cue
-		if (gDoCue)
-		{
-			glBegin(GL_LINES);
-			float cuex = sin(gCueAngle) * gCuePower;
-			float cuez = cos(gCueAngle) * gCuePower;
-			glColor3f(1.0, 0.0, 0.0);
-			glVertex3f(gTable.balls[0].position(0), (BALL_RADIUS / 2.0f), gTable.balls[0].position(1));
-			glVertex3f((gTable.balls[0].position(0) + cuex), (BALL_RADIUS / 2.0f), (gTable.balls[0].position(1) + cuez));
-			glColor3f(1.0, 0, 0);
-			glEnd();
-		}
-
-		//glPopMatrix();
-
-	}
-
-	if (startMultiplayer == true) {
-		for (int i = 0; i < NUM_BALLS; i++)
-		{
-			if (i == 0) {
-
-				glPushMatrix();
-				glTranslatef(gTable.balls[i].position(0), (BALL_RADIUS / 2.0), gTable.balls[i].position(1));
-				glutSolidSphere(gTable.balls[i].radius, 32, 32);
-				glPopMatrix();
-				glColor3f(0.5, 0, 1.0);
-			}
-			else {
-				if (gTable.balls[i].touched == 0) {
-					GLUquadricObj* cylin = gluNewQuadric();
-					glPushMatrix();
-					glTranslatef(gTable.balls[i].position(0), (BALL_RADIUS / 2.0), gTable.balls[i].position(1));
-					GLUquadricObj* quadratic;
-					quadratic = gluNewQuadric();
-					glColor3f(1, 0, 0);
-					glPushMatrix();
-					glRotatef(90, -1, 0, 0);
-					glColor3f(1, 0, 0);
-					gluCylinder(quadratic, 0.05f, 0.01f, 0.2f, 32, 32);
-					glPopMatrix();
-
-
-					GLUquadricObj* ball;
-					ball = gluNewQuadric();
-					glPushMatrix();
-					glTranslatef(gTable.balls[i].position(0), (BALL_RADIUS)+0.19f, gTable.balls[i].position(1));
-					gluSphere(ball, 0.02f, 30, 30);
-					glPopMatrix();
-					/*
-					GLUquadricObj* ball2;
-					ball2 = gluNewQuadric();
-					glPushMatrix();
-					glTranslatef(gTable.balls[i].position(0), (BALL_RADIUS), gTable.balls[i].position(1) + 0.01);
-					gluSphere(ball2, 0.02f, 30, 30);
-					glPopMatrix();
-					*/
-				}
-				else {
-					GLUquadricObj* cylin = gluNewQuadric();
-					glPushMatrix();
-					glTranslatef(gTable.balls[i].position(0), (BALL_RADIUS), gTable.balls[i].position(1));
-					GLUquadricObj* quadratic;
-					quadratic = gluNewQuadric();
-					glColor3f(1, 0, 0);
-					glPushMatrix();
-					glRotatef(0, 1, 0, 0);
-					glColor3f(1, 1, 1);
-					gluCylinder(quadratic, 0.01f, 0.05f, 0.2f, 32, 32);
-					glPopMatrix();
-
-
-					GLUquadricObj* ball;
-					ball = gluNewQuadric();
-					glPushMatrix();
-					glTranslatef(gTable.balls[i].position(0), (BALL_RADIUS), gTable.balls[i].position(1));
-					gluSphere(ball, 0.02f, 30, 30);
-					glPopMatrix();
-				}
-
-
-			}
-		}
-
-
-
-		int gg = 0;
-		for (int i = 0; i < NUM_BALLS; i++)
-		{
-			if (gTable.balls[i].touched == 1) {
-				gg++;
-			}
-		}
-		if (gg == 10) {
-			char  strikechar[] = "Strike!";
-			glRasterPos2f(0.1f, 0.71f);
-			glColor3f(1., 0., 0.);
-			int lenx = strlen(strikechar);
-			for (int i = 0; i < lenx; i++) {
-				glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, strikechar[i]);
-			}
-			//std::this_thread::sleep_for(std::chrono::seconds(1));
-		}
-		if (Gameturn >= maxGameTurn) {
-			char  strikechariX[] = "Game Over!";
-			gameOver = true;
-			glRasterPos2f(0.0f, 0.61f);
-			glColor3f(1., 0., 0.);
-			int lenOi = strlen(strikechariX);
-			for (int i = 0; i < lenOi; i++) {
-				glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, strikechariX[i]);
-			}
-			char  whowon[2] = "";
-			char  resultx[] = " Wins!";
-			if (gTable.players[0].score > gTable.players[1].score) {
-
-				std::strcat(whowon, "1");
-			}
-			else {
-				std::strcat(whowon, "2");
-			}
-			char* newArray = new char[std::strlen("Player ") + std::strlen(whowon) + 1];
-			std::strcpy(newArray, "Player ");
-			std::strcat(newArray, whowon);
-			int len12 = strlen(resultx);
-			int len22 = strlen(newArray);
-			//std::cout << lenOi << " str" << len12 << " res" << len22 << " who";
-
-			for (int j = 0; j < len22; j++) {
-				glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, newArray[j]);
-			}
-			for (int k = 0; k < len12; k++) {
-				glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, resultx[k]);
-			}
-		}
-
-		if (gTable.AnyBallsMoving() == false && nonRepeat == true) {
-			gTable.players[Gameturn % NUM_PLAYERS].score = gTable.players[Gameturn % NUM_PLAYERS].score + gg;
-			nonRepeat = false;
-			canhitM = true;
-			//std::cout <<" Soldier Boy " << gTable.players[Gameturn % NUM_PLAYERS].score;
-		}
-		//gTable.players[0].score = gTable.players[0].score + gg;
-
-
-		char  da1[20] = "0";
-		itoa(gTable.players[0].score, da1, 10);
-		glRasterPos2f(-0.6f, 0.7f);
-		glColor3f(1., 0., 0.);
-		char  da2[20] = "player 1 Score :";
-		int lenc1 = strlen(da2);
-		for (int i = 0; i < lenc1; i++) {
-			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, da2[i]);
-		}
-		int lenc = strlen(da1);
-		for (int i = 0; i < lenc; i++) {
-			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, da1[i]);
-		}
-
-		char  da3[20] = "0";
-		itoa(gTable.players[1].score, da3, 10);
-		glRasterPos2f(-0.6f, 0.8f);
-		glColor3f(1., 0., 0.);
-		char  da4[20] = "player 2 Score :";
-		int lenc2 = strlen(da4);
-		for (int i = 0; i < lenc2; i++) {
-			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, da4[i]);
-		}
-		int lenc3 = strlen(da3);
-		for (int i = 0; i < lenc3; i++) {
-			glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, da3[i]);
-		}
-
-
-		//draw the table
-		for (int i = 0; i < NUM_CUSHIONS; i++)
-		{
-
-			glBegin(GL_LINE_LOOP);
-			glVertex3f(gTable.cushions[i].vertices[0](0), 0.0, gTable.cushions[i].vertices[0](1));
-			glVertex3f(gTable.cushions[i].vertices[0](0), 0.1, gTable.cushions[i].vertices[0](1));
-			glVertex3f(gTable.cushions[i].vertices[1](0), 0.1, gTable.cushions[i].vertices[1](1));
-			glVertex3f(gTable.cushions[i].vertices[1](0), 0.0, gTable.cushions[i].vertices[1](1));
-			glEnd();
-		}
-		for (int i = 0; i < NUM_CUSHIONS; i++)
-		{
-
-			glBegin(GL_LINE_LOOP);
+			glBegin(GL_POLYGON);
 			glVertex3f(gLane.cushions[i].vertices[0](0), 0.0, gLane.cushions[i].vertices[0](1));
 			glVertex3f(gLane.cushions[i].vertices[0](0), 0.1, gLane.cushions[i].vertices[0](1));
 			glVertex3f(gLane.cushions[i].vertices[1](0), 0.1, gLane.cushions[i].vertices[1](1));
@@ -1563,21 +1007,7 @@ void KeyboardFunc(unsigned char key, int x, int y)
 					}
 				}
 				else {
-					/*if (identity == 0) {
-						vec2 imp((-sin(gCueAngle) * gCuePower * gCueBallFactor),
-							(-cos(gCueAngle) * gCuePower * gCueBallFactor));
-						if (gameOver == false && canhit == true) {
-							gTable.balls[0].ApplyImpulse(imp);
-							gCueAnglePass = gCueAngle;
-							gCuePowerPass = gCuePower;
-							canhit = false;
-							canhitM = true;
-							nonRepeat = true;
-							sendMessage = true;
-							printf("Sending from sevrer");
-							sendCommand(gCueAnglePass, gCuePowerPass);
-						}
-					}*/
+					
 					 if(Gameturn%2 == identity){
 						vec2 imp((-sin(gCueAngle) * gCuePower * gCueBallFactor),
 							(-cos(gCueAngle) * gCuePower * gCueBallFactor));
@@ -1590,7 +1020,7 @@ void KeyboardFunc(unsigned char key, int x, int y)
 							nonRepeat = true;
 							sendMessage = true;
 							printf("Sending from client");
-							sendServerCommand(gCueAnglePass, gCuePowerPass);
+							sendServerCommand(&gCueAnglePass, &gCuePowerPass);
 						}
 					 }
 					 else {
@@ -1652,7 +1082,7 @@ void KeyboardFunc(unsigned char key, int x, int y)
 		sendServerMessage();
 		break;
 	}
-	case('q'):
+	case('qq'):
 		{
 		//welcomeOn = false;
 		if (gameOver == false) {
@@ -2226,6 +1656,8 @@ void InitLights(void)
 	GLfloat mat_specular[] = { 1.0, 1.0, 1.0, 1.0 };
 	GLfloat mat_shininess[] = { 50.0 };
 	GLfloat light_position[] = { 1.0, 1.0, 1.0, 0.0 };
+	GLfloat lightgreen[] = { 0.5, 1.0, 0.5, 1.0 };
+
 	glClearColor (0.0, 0.0, 0.0, 0.0);
 	glShadeModel (GL_SMOOTH);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
@@ -2274,19 +1706,14 @@ int main(int argc, char *argv[])
 	gTable.SetupCushions();
 	gLane.SetupCushions();
 
-	//net::server.connect();
-	//net::client.start(argv[1], argv[2]);
-
 	
-
-	//td::thread t1(serverConnectfn);
-	std::thread t1(connectServer);
+	//std::thread t1(connectServer);
 	std::thread t2(startClient, argv[1], argv[2]);
 
 	//std::thread t3(serverinteract);
 	//std::thread t4(Clientinteract);
 
-	t1.detach();
+	//t1.detach();
 	t2.detach();
 
 	//t3.detach();

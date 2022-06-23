@@ -1,4 +1,2 @@
-H:\07 Lincoln\5 teaching\2021 cmp9133m advance programming\Pool Game v3.0\Debug\Pool Game.exe
-H:\07 Lincoln\5 teaching\2021 cmp9133m advance programming\Pool Game v3.0\Debug\Pool Game.pdb
-D:\Uni projects\Pool Game v3.0@week4\Pool Game v3.0\Debug\Pool Game.exe
-D:\Uni projects\Pool Game v3.0@week4\openglbowling\Debug\Pool Game.exe
+D:\Uni projects\Pool Game v3.0@week4\finalversion\ap2\Debug\Pool Game.exe
+D:\Uni projects\Pool Game v3.0@week4\finalversion\bowlinggame\Debug\Pool Game.exe

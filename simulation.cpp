@@ -377,7 +377,32 @@ void lane::SetupCushions(void)
 	cushions[4].vertices[1](0) = -TABLE_X + 1.55f;
 	cushions[4].vertices[1](1) = -TABLE_Z;
 
-	for (int i = 0; i < NUM_CUSHIONS; i++)
+	cushions[5].vertices[0](0) = -TABLE_X - 1.55f;
+	cushions[5].vertices[0](1) = -TABLE_Z;
+	cushions[5].vertices[1](0) = -TABLE_X - 1.55f;
+	cushions[5].vertices[1](1) = TABLE_Z;
+
+	cushions[6].vertices[0](0) = -TABLE_X - 1.55f;
+	cushions[6].vertices[0](1) = TABLE_Z;
+	cushions[6].vertices[1](0) = TABLE_X - 1.55f;
+	cushions[6].vertices[1](1) = TABLE_Z;
+
+	cushions[7].vertices[0](0) = TABLE_X - 1.55f;
+	cushions[7].vertices[0](1) = TABLE_Z;
+	cushions[7].vertices[1](0) = TABLE_X - 1.55f;
+	cushions[7].vertices[1](1) = -TABLE_Z;
+
+	cushions[8].vertices[0](0) = TABLE_X - 1.55f;
+	cushions[8].vertices[0](1) = -TABLE_Z;
+	cushions[8].vertices[1](0) = TABLE_X - 1.55f;
+	cushions[8].vertices[1](1) = -TABLE_Z;
+
+	cushions[9].vertices[0](0) = TABLE_X - 1.55f;
+	cushions[9].vertices[0](1) = -TABLE_Z;
+	cushions[9].vertices[1](0) = -TABLE_X - 1.55f;
+	cushions[9].vertices[1](1) = -TABLE_Z;
+
+	for (int i = 0; i < NUM_CUSHIONS_lane; i++)
 	{
 		cushions[i].MakeCentre();
 		cushions[i].MakeNormal();

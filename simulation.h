@@ -15,7 +15,8 @@
 #define TWO_PI			(6.2832f)
 #define	SIM_UPDATE_MS	(10)
 #define NUM_BALLS		(11)		
-#define NUM_CUSHIONS	(5)		
+#define NUM_CUSHIONS	(5)
+#define NUM_CUSHIONS_lane (10)		
 #define MAX_PARTICLES	(200)
 #define NUM_PLAYERS	(2)
 /*-----------------------------------------------------------
@@ -95,35 +96,7 @@ public:
 	void HitBall(ball &b);
 };
 
-class pin
-{
-	static int ballIndexCnt;
-public:
-	vec2	position;
-	vec2	velocity;
-	float	radius;
-	float	mass;
-	int		index;
 
-	pin() : position(0.0), velocity(0.0), radius(BALL_RADIUS),
-		mass(PIN_MASS) {
-		index = ballIndexCnt++; //Reset();
-	}
-	/*
-	void Reset(void);
-	void ApplyImpulse(vec2 imp);
-	void ApplyFrictionForce(int ms);
-	void DoPlaneCollision(const cushion& c);
-	void DoBallCollision(ball& b);
-	void Update(int ms);
-
-	bool HasHitPlane(const cushion& c) const;
-	bool HasHitBall(const ball& b) const;
-
-	void HitPlane(const cushion& c);
-	void HitBall(ball& b);
-	*/
-};
 
 class particle 
 {

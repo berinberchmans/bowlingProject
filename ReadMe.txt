@@ -1,5 +1,5 @@
 ========================================================================
-    CONSOLE APPLICATION : Pool Game Project Overview
+    CONSOLE APPLICATION : Bowling game
 ========================================================================
 
 AppWizard has created this Pool Game application for you.
